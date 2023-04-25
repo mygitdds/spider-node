@@ -13,6 +13,7 @@ import cn.spider.framework.controller.impl.FollowerHeartServiceImpl;
 import cn.spider.framework.controller.leader.Leader;
 import cn.spider.framework.controller.leader.LeaderManager;
 import cn.spider.framework.controller.sdk.interfaces.FollowerHeartService;
+import cn.spider.framework.controller.sdk.interfaces.LeaderHeartService;
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -61,9 +62,12 @@ public class FollowerManager {
 
     private ServiceBinder binder;
 
-    MessageConsumer<JsonObject> followerHeartConsumer;
+    private MessageConsumer<JsonObject> followerHeartConsumer;
 
-    public FollowerManager(Vertx vertx, RedisTemplate<String, String> redisTemplate) {
+    private LeaderHeartService leaderHeartService;
+
+
+    public FollowerManager(Vertx vertx, RedisTemplate<String, String> redisTemplate, LeaderHeartService leaderHeartService) {
         NetClientOptions options = new NetClientOptions()
                 .setLogActivity(true)
                 .setConnectTimeout(10000);
@@ -76,6 +80,7 @@ public class FollowerManager {
         String leaderServiceAddr = BrokerRole.LEADER.name() + LeaderService.ADDRESS;
         this.leaderService = LeaderService.createProxy(vertx, leaderServiceAddr);
         this.binder = new ServiceBinder(vertx);
+        this.leaderHeartService = leaderHeartService;
     }
 
     public void init() {
@@ -158,26 +163,34 @@ public class FollowerManager {
             this.vertx.sharedData().getLock(Constant.CAMPAIGN_LEADER)
                     .onSuccess(suss -> {
                         Lock lock = suss;
-                        String brokerName = this.redisTemplate.opsForValue().get(Constant.LEADER_CONFIG_KEY);
-                        if (StringUtils.isEmpty(brokerName) || StringUtils.equals(brokerName, leader.getBrokerName())) {
-                            // 放弃当前为follower的角色
-                            Future<Void> upgrade = leaderService.upgrade();
-                            upgrade.onSuccess(upgradeSuss -> {
-                                // 直接设置- 晋升为leader
-                                this.redisTemplate.opsForValue().set(Constant.LEADER_CONFIG_KEY, this.followerName);
-                                // 启动当前节点的leader角色
-                                LeaderManager leaderManager = SpringUtil.getBean(LeaderManager.class);
-                                leaderManager.init();
-                                // 关闭follower信息
-                                this.stop();
-                                // 释放锁
-                                lock.release();
-                            }).onFailure(fail -> {
-                                lock.release();
-                                log.error("重置leader-fail {}", ExceptionMessage.getStackTrace(fail));
-                            });
-
-                        }
+                        // 跟leader进行通信
+                        Future<Void> heartFuture = leaderHeartService.detection();
+                        // 如果心跳成功，说明leader已经产生
+                        heartFuture.onSuccess(heartSuss -> {
+                            log.info("leader-already-generated competition-fail-brokerName {}",this.followerName);
+                            lock.release();
+                        }).onFailure(heartFail -> {
+                            // 说明leader还没有产生
+                            String brokerName = this.redisTemplate.opsForValue().get(Constant.LEADER_CONFIG_KEY);
+                            if (StringUtils.isEmpty(brokerName) || StringUtils.equals(brokerName, leader.getBrokerName())) {
+                                // 放弃当前为follower的角色
+                                Future<Void> upgrade = leaderService.upgrade();
+                                upgrade.onSuccess(upgradeSuss -> {
+                                    // 直接设置- 晋升为leader
+                                    this.redisTemplate.opsForValue().set(Constant.LEADER_CONFIG_KEY, this.followerName);
+                                    // 启动当前节点的leader角色
+                                    LeaderManager leaderManager = SpringUtil.getBean(LeaderManager.class);
+                                    leaderManager.init();
+                                    // 关闭follower信息
+                                    this.stop();
+                                    // 释放锁
+                                    lock.release();
+                                }).onFailure(fail -> {
+                                    lock.release();
+                                    log.error("重置leader-fail {}", ExceptionMessage.getStackTrace(fail));
+                                });
+                            }
+                        });
                     }).onFailure(fail -> {
                         log.error("锁获取失败 {}", ExceptionMessage.getStackTrace(fail));
                     });

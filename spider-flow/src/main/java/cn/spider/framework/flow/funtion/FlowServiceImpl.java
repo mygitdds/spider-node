@@ -66,11 +66,12 @@ public class FlowServiceImpl implements FlowService {
         StartFlowRequest request = data.mapTo(StartFlowRequest.class);
         BusinessFunctions functions  = businessManager.queryStartIdByFunctionId(request.getFunctionId());
 
-        String requestId = buildRequestId()+"";
+        String requestId = buildRequestId();
         StoryRequest<Object> req = ReqBuilder.returnType(Object.class)
                 .startId(functions.getStartId())
                 .functionName(functions.getName())
                 .startFlowRequest(request)
+                .requestId(requestId)
                  // 默认给leader
                 .flowExampleRole(FlowExampleRole.LEADER)
                 .functionId(functions.getId())
@@ -99,10 +100,10 @@ public class FlowServiceImpl implements FlowService {
         return promise.future();
     }
 
-    private Long buildRequestId() {
+    private String buildRequestId() {
         SnowIdDto snowIdDto = IdWorker.calculateDataIdAndWorkId2(this.redisTemplate, REQUEST_PREFIX);
         SnowFlake snowFlake = new SnowFlake(snowIdDto.getWorkerId(), snowIdDto.getDataCenterId(), snowIdDto.getTimestamp());
-        return snowFlake.nextId();
+        return snowFlake.nextId()+"";
     }
 
 

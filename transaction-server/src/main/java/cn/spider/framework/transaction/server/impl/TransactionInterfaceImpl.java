@@ -1,11 +1,13 @@
 package cn.spider.framework.transaction.server.impl;
 
 import cn.spider.framework.linker.sdk.data.TransactionalType;
+import cn.spider.framework.transaction.sdk.data.NotifyTranscriptsChange;
 import cn.spider.framework.transaction.sdk.data.RegisterTransactionRequest;
 import cn.spider.framework.transaction.sdk.data.RegisterTransactionResponse;
 import cn.spider.framework.transaction.sdk.data.TransactionOperateRequest;
 import cn.spider.framework.transaction.sdk.interfaces.TransactionInterface;
 import cn.spider.framework.transaction.server.TransactionManager;
+import cn.spider.framework.transaction.server.transcript.TranscriptManager;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
@@ -22,8 +24,11 @@ public class TransactionInterfaceImpl implements TransactionInterface {
 
     private TransactionManager transactionManager;
 
-    public TransactionInterfaceImpl(TransactionManager transactionManager) {
+    private TranscriptManager transcriptManager;
+
+    public TransactionInterfaceImpl(TransactionManager transactionManager,TranscriptManager transcriptManager) {
         this.transactionManager = transactionManager;
+        this.transcriptManager = transcriptManager;
     }
 
     @Override
@@ -55,7 +60,14 @@ public class TransactionInterfaceImpl implements TransactionInterface {
     public Future<JsonObject> rollBack(JsonObject data) {
         Promise<JsonObject> promise = Promise.promise();
         TransactionOperateRequest request = data.mapTo(TransactionOperateRequest.class);
-        transactionManager.transactionOperate(request.getGroupId(),promise, TransactionalType.ROLLBACK);
+        this.transactionManager.transactionOperate(request.getGroupId(),promise, TransactionalType.ROLLBACK);
         return promise.future();
+    }
+
+    @Override
+    public Future<Void> replaceTranscripts(JsonObject data) {
+        NotifyTranscriptsChange notifyTranscriptsChange = data.mapTo(NotifyTranscriptsChange.class);
+        transcriptManager.replace(notifyTranscriptsChange.getTranscript());
+        return Future.succeededFuture();
     }
 }

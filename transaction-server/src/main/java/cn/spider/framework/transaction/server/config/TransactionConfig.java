@@ -8,6 +8,7 @@ import cn.spider.framework.db.util.RocksdbUtil;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.framework.transaction.server.TransactionManager;
 import cn.spider.framework.transaction.server.TransactionServerVerticle;
+import cn.spider.framework.transaction.server.transcript.TranscriptManager;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
 import org.springframework.context.ApplicationContext;
@@ -62,6 +63,11 @@ public class TransactionConfig {
         TimeUnit maxExecuteTimeUnit = TimeUnit.MINUTES;
         WorkerExecutor executor = vertx.createSharedWorkerExecutor("my-worker-pool", poolSize, maxExecuteTime, maxExecuteTimeUnit);
         return executor;
+    }
+
+    @Bean
+    public TranscriptManager buildTranscriptManager(){
+        return new TranscriptManager();
     }
 
 }

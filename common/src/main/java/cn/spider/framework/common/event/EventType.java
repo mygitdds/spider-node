@@ -1,5 +1,4 @@
 package cn.spider.framework.common.event;
-
 import cn.spider.framework.common.role.EventTypeRole;
 import cn.spider.framework.common.role.SystemRole;
 
@@ -16,10 +15,16 @@ public enum EventType {
 
     END_TRANSACTION(SystemRole.TRANSACTION,"end_transaction","事务执行结束",EventTypeRole.BUSINESS),
 
+    REGISTER_TRANSACTION(SystemRole.TRANSACTION,"register_transaction","注册事务",EventTypeRole.BUSINESS),
+
     //generate
     LEADER_GENERATE(SystemRole.CONTROLLER,"leader_generate","通知follower,leader已经被创建了",EventTypeRole.SYSTEM),
     //death
     FOLLOWER_DEATH(SystemRole.CONTROLLER,"leader_generate","通知集群所有节点,某节点挂了",EventTypeRole.SYSTEM),
+
+    TRANSCRIPT_CHANGE(SystemRole.CONTROLLER,"transcript_change","副本变化事件",EventTypeRole.SYSTEM),
+    // replace
+    LEADER_REPLACE_CHANGE(SystemRole.CONTROLLER,"leader_replace_change","副本替换具体的leader",EventTypeRole.SYSTEM),
 
     ;
     private SystemRole role;

@@ -17,6 +17,7 @@ import cn.spider.framework.flow.load.loader.HotClassLoader;
 import cn.spider.framework.flow.SpiderCoreVerticle;
 import cn.spider.framework.flow.sync.Publish;
 import cn.spider.framework.flow.sync.SyncBusinessRecord;
+import cn.spider.framework.flow.transcript.TranscriptManager;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.framework.transaction.sdk.interfaces.TransactionInterface;
 import io.vertx.core.Vertx;
@@ -139,6 +140,11 @@ public class SpiderCoreConfig {
     @Bean
     public Publish buildPublish(Vertx vertx) {
         return new Publish(vertx);
+    }
+
+    @Bean
+    public TranscriptManager buildTranscriptManager(RedisTemplate redisTemplate,EventManager eventManager,Vertx vertx,TransactionInterface transactionInterface){
+        return new TranscriptManager(redisTemplate,eventManager,vertx,transactionInterface);
     }
 
 

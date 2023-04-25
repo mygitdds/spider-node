@@ -4,6 +4,7 @@ import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.event.EventType;
 import cn.spider.framework.common.event.data.FollowerDeathData;
 import cn.spider.framework.common.event.data.NotifyLeaderCommissionData;
+import cn.spider.framework.common.event.data.TranscriptChangeData;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
@@ -90,7 +91,7 @@ public class LeaderManager {
 
     private void registerLeaderHeartConsumer() {
         LeaderHeartService leaderHeartService = new LeaderHeartServiceImpl();
-        String leaderHeartAddr = ContainerService.ADDRESS;
+        String leaderHeartAddr = LeaderHeartService.ADDRESS;
         // 发布 LeaderHeartService的消费者
         this.binder.setAddress(leaderHeartAddr)
                 .register(LeaderHeartService.class, leaderHeartService);
@@ -209,23 +210,29 @@ public class LeaderManager {
                     }
                 }
             }
+            sendTranscriptChange();
             // 重发事件
             return;
         }
         this.transcriptRelationMap.remove(brokerName);
 
-        this.transcriptRelationMap.forEach((key,value)->{
+        this.transcriptRelationMap.forEach((key, value) -> {
             Set<String> brokerNames = value;
             brokerNames.remove(brokerName);
         });
+        sendTranscriptChange();
         // 重发时间
     }
 
     /**
      * 副本变化发送相关事件
      */
-    private void sendTranscriptChange(){
-
+    private void sendTranscriptChange() {
+        this.transcriptRelationMap.forEach((key, value) -> {
+            eventManager.sendMessage(EventType.TRANSCRIPT_CHANGE, TranscriptChangeData.builder()
+                    .transcript(value).brokerName(key)
+                    .build());
+        });
     }
 
     /**

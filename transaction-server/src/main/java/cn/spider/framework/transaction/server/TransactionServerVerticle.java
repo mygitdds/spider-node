@@ -4,6 +4,7 @@ import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.transaction.sdk.interfaces.TransactionInterface;
 import cn.spider.framework.transaction.server.config.TransactionConfig;
 import cn.spider.framework.transaction.server.impl.TransactionInterfaceImpl;
+import cn.spider.framework.transaction.server.transcript.TranscriptManager;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -39,7 +40,8 @@ public class TransactionServerVerticle extends AbstractVerticle {
         this.brokerName = BrokerInfoUtil.queryBrokerName(vertx);
 
         TransactionManager transactionManager = factory.getBean(TransactionManager.class);
-        TransactionInterfaceImpl transactionInterface = new TransactionInterfaceImpl(transactionManager);
+        TranscriptManager transcriptManager = factory.getBean(TranscriptManager.class);
+        TransactionInterfaceImpl transactionInterface = new TransactionInterfaceImpl(transactionManager,transcriptManager);
         // 发布 对我提供您接口
         String transactionAddr = this.brokerName+TransactionInterface.ADDRESS;
         System.out.println("需要发布的transactionAddr  "+transactionAddr);

@@ -28,6 +28,7 @@ public class ControllerVerticle extends AbstractVerticle {
     ElectionLeader electionLeader = this.factory.getBean(ElectionLeader.class);
     // 进行选举
     electionLeader.election();
+
     startPromise.complete();
   }
 

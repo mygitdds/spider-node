@@ -20,5 +20,9 @@ public class Constant {
 
     public final static String EVENT_NAME = "EVENT_NAME";
 
+    //  transcript prefix
+
+    public final static String TRANSCRIPT_PREFIX = "TRANSCRIPT_PREFIX";
+
 
 }

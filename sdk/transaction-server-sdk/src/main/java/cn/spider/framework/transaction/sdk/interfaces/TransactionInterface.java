@@ -6,6 +6,8 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
+import java.util.Set;
+
 /**
  * @BelongsProject: spider-node
  * @BelongsPackage: cn.spider.framework.transaction.sdk.interfaces
@@ -28,4 +30,6 @@ public interface TransactionInterface {
     Future<JsonObject> commit(JsonObject data);
 
     Future<JsonObject> rollBack(JsonObject data);
+
+    Future<Void> replaceTranscripts(JsonObject data);
 }

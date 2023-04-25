@@ -1,6 +1,8 @@
 package cn.spider.framework.transaction.server;
 
 import cn.spider.framework.common.event.EventManager;
+import cn.spider.framework.common.event.EventType;
+import cn.spider.framework.common.event.data.RegisterTransactionData;
 import cn.spider.framework.common.event.data.StartTransactionData;
 import cn.spider.framework.common.utils.IdWorker;
 import cn.spider.framework.common.utils.SnowFlake;
@@ -18,7 +20,9 @@ import io.vertx.core.WorkerExecutor;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +51,7 @@ public class TransactionManager {
 
     private EventManager eventManager;
 
-    public TransactionManager(WorkerExecutor workerExecutor, RedisTemplate redisEnv, LinkerService linkerService,RocksdbUtil rocksdbUtil) {
+    public TransactionManager(WorkerExecutor workerExecutor, RedisTemplate redisEnv, LinkerService linkerService, RocksdbUtil rocksdbUtil) {
         this.workerExecutor = workerExecutor;
         this.linkerService = linkerService;
         this.cacheMap = new HashMap<>();
@@ -55,13 +59,30 @@ public class TransactionManager {
         this.rocksdbUtil = rocksdbUtil;
     }
 
+    public void registerSyncTransaction(String requestId, String groupId, String taskId, String workerName) {
+
+        TransactionExample example = buildTransactionExample(requestId, groupId, workerName, taskId);
+        groupId = example.getTransactionGroupId();
+        if (!cacheMap.containsKey(groupId)) {
+            RocksDbMap rocksDbMaps = new RocksDbMap(groupId, rocksdbUtil);
+            cacheMap.put(groupId, rocksDbMaps);
+        }
+        RocksDbMap rocksDbMap = cacheMap.get(groupId);
+        String transactionKey = requestId + taskId;
+        try {
+            rocksDbMap.put(transactionKey, example);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public RegisterTransactionResponse registerTransaction(String requestId, String groupId, String taskId, String workerName) {
 
-        TransactionExample example = buildTransactionExample(requestId, groupId, workerName,taskId);
+        TransactionExample example = buildTransactionExample(requestId, groupId, workerName, taskId);
         groupId = example.getTransactionGroupId();
-        if(!cacheMap.containsKey(groupId)){
+        if (!cacheMap.containsKey(groupId)) {
             RocksDbMap rocksDbMaps = new RocksDbMap(groupId, rocksdbUtil);
-            cacheMap.put(groupId,rocksDbMaps);
+            cacheMap.put(groupId, rocksDbMaps);
         }
         RocksDbMap rocksDbMap = cacheMap.get(groupId);
         String transactionKey = requestId + taskId;
@@ -73,22 +94,26 @@ public class TransactionManager {
         RegisterTransactionResponse response = new RegisterTransactionResponse();
         response.setGroupId(example.getTransactionGroupId());
         response.setBranchId(example.getBranchId());
+        RegisterTransactionData registerTransactionData = RegisterTransactionData.builder().build();
+        BeanUtils.copyProperties(example, registerTransactionData);
+        // 发送事件+
+        eventManager.sendMessage(EventType.REGISTER_TRANSACTION, registerTransactionData);
         return response;
     }
 
-    public void transactionOperate(String groupId,Promise<JsonObject> promise,TransactionalType transactionalType) {
+    public void transactionOperate(String groupId, Promise<JsonObject> promise, TransactionalType transactionalType) {
 
         RocksDbMap rocksDbMap = cacheMap.containsKey(groupId) ? cacheMap.get(groupId) : new RocksDbMap(groupId, rocksdbUtil);
 
         List<TransactionExample> examples = rocksDbMap.getAll(TransactionExample.class);
 
-        if(CollectionUtils.isEmpty(examples)){
-           promise.complete();
+        if (CollectionUtils.isEmpty(examples)) {
+            promise.complete();
         }
 
-        TransactionGroupExample transactionGroupExample = new TransactionGroupExample(groupId,examples,promise);
+        TransactionGroupExample transactionGroupExample = new TransactionGroupExample(groupId, examples, promise);
         // 选择执行方式
-        switch (transactionalType){
+        switch (transactionalType) {
             case ROLLBACK:
                 transactionGroupExample.runRollBack(this.linkerService);
                 break;
@@ -99,20 +124,16 @@ public class TransactionManager {
     }
 
 
-    private Long buildGroupId() {
+    private String buildGroupId() {
         SnowIdDto snowIdDto = IdWorker.calculateDataIdAndWorkId2(this.redisEnv, GROUP_PREFIX);
         SnowFlake snowFlake = new SnowFlake(snowIdDto.getWorkerId(), snowIdDto.getDataCenterId(), snowIdDto.getTimestamp());
-        return snowFlake.nextId();
+        return snowFlake.nextId() + "";
     }
 
-    private TransactionExample buildTransactionExample(String requestId, String groupId, String workerName,String taskId) {
-        String brushId = buildGroupId() + "";
-        if (StringUtils.isEmpty(groupId)) {
-            // 利用雪花算法构建
-            groupId = brushId;
-        }
+    private TransactionExample buildTransactionExample(String requestId, String groupId, String workerName, String taskId) {
+        String brushId = buildGroupId();
         return TransactionExample.builder()
-                .transactionGroupId(groupId)
+                .transactionGroupId(StringUtils.isEmpty(groupId) ? buildGroupId() : groupId)
                 .transactionStatus(TransactionStatus.INIT)
                 .requestId(requestId)
                 .taskId(taskId)
@@ -121,7 +142,6 @@ public class TransactionManager {
                 .build();
 
     }
-
 
 
 }

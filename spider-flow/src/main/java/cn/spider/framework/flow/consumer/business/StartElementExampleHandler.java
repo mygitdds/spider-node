@@ -3,6 +3,7 @@ package cn.spider.framework.flow.consumer.business;
 import cn.spider.framework.common.event.EventType;
 import cn.spider.framework.common.event.data.StartElementExampleData;
 import cn.spider.framework.flow.engine.StoryEngine;
+import cn.spider.framework.flow.engine.example.FlowExampleManager;
 import cn.spider.framework.flow.transcript.TranscriptManager;
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.MultiMap;
@@ -40,13 +41,13 @@ public class StartElementExampleHandler implements InitializingBean {
         consumer.handler(message -> {
             MultiMap multiMap = message.headers();
             String brokerName = multiMap.get("brokerName");
-
             // 校验该本节点是否为 brokerName的功能follower
             if (!transcriptManager.checkIsTranscript(brokerName)) {
                 return;
             }
             StartElementExampleData elementExampleData = JSON.parseObject(message.body(), StartElementExampleData.class);
-
+            FlowExampleManager exampleManager = this.storyEngine.getFlowExampleManager();
+            exampleManager.syncTranscriptStartElementExample(elementExampleData, brokerName);
         });
     }
 

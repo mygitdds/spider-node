@@ -142,7 +142,7 @@ public class LogConsumer {
                 .requestParam(elementExampleData.getRequestParam())
                 .returnParam(elementExampleData.getReturnParam().toString())
                 .exception(elementExampleData.getException())
-                .status(elementExampleData.getStatus())
+                .status(elementExampleData.getStatus().name())
                 .build();
 
     }

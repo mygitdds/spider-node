@@ -73,7 +73,8 @@ public class SchedulerManager {
                 .requestParam(JSON.toJSONString(paramMap))
                 .requestId(serviceTask.getRequestId())
                 .flowElementId(serviceTask.getId())
-                .status(ElementStatus.SUSS.name())
+                .status(ElementStatus.SUSS)
+                .returnClassType(method.getReturnType().getTypeName())
                 .build();
         result.onSuccess(suss -> {
             LinkerServerResponse linkerServerResponse = JSON.parseObject(suss.getJsonObject("data").toString(), LinkerServerResponse.class);
@@ -83,7 +84,7 @@ public class SchedulerManager {
                 elementExampleData.setReturnParam(JsonObject.mapFrom(resultObject));
                 promise.complete(resultObject);
             } else {
-                elementExampleData.setStatus(ElementStatus.FAIL.name());
+                elementExampleData.setStatus(ElementStatus.FAIL);
                 elementExampleData.setException(linkerServerResponse.getExceptional());
                 promise.fail(new Exception(linkerServerResponse.getExceptional()));
             }
@@ -91,7 +92,7 @@ public class SchedulerManager {
         }).onFailure(fail -> {
             // 通知失败
             promise.fail(fail);
-            elementExampleData.setStatus(ElementStatus.FAIL.name());
+            elementExampleData.setStatus(ElementStatus.FAIL);
             elementExampleData.setException(ExceptionMessage.getStackTrace(fail));
             // 发送执行失败的数据
             eventManager.sendMessage(EventType.ELEMENT_END,elementExampleData);

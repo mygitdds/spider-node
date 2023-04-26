@@ -1,5 +1,6 @@
 package cn.spider.framework.transaction.server.config;
 
+import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.common.utils.SpringUtil;
 import cn.spider.framework.db.config.DbRedisConfig;
@@ -39,8 +40,8 @@ public class TransactionConfig {
     }
 
     @Bean
-    public TransactionManager buildTransactionTransactionManager(RedisTemplate redisEnv, LinkerService linkerService, WorkerExecutor workerExecutor, RocksdbUtil rocksdbUtil) {
-        return new TransactionManager(workerExecutor, redisEnv, linkerService, rocksdbUtil);
+    public TransactionManager buildTransactionTransactionManager(RedisTemplate redisEnv, LinkerService linkerService, WorkerExecutor workerExecutor, RocksdbUtil rocksdbUtil,EventManager eventManager) {
+        return new TransactionManager(workerExecutor, redisEnv, linkerService, rocksdbUtil,eventManager);
     }
 
     @Bean("springUtil")
@@ -68,6 +69,11 @@ public class TransactionConfig {
     @Bean
     public TranscriptManager buildTranscriptManager(){
         return new TranscriptManager();
+    }
+
+    @Bean
+    public EventManager buildEventManager(Vertx vertx){
+        return new EventManager(vertx);
     }
 
 }

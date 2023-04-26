@@ -1,8 +1,7 @@
 package cn.spider.framework.flow.consumer.business;
 
 import cn.spider.framework.common.event.EventType;
-import cn.spider.framework.common.event.data.EndElementExampleData;
-import cn.spider.framework.common.event.enums.ElementStatus;
+import cn.spider.framework.common.event.data.EndFlowExampleEventData;
 import cn.spider.framework.flow.engine.StoryEngine;
 import cn.spider.framework.flow.transcript.TranscriptManager;
 import com.alibaba.fastjson.JSON;
@@ -18,24 +17,25 @@ import javax.annotation.Resource;
  * @BelongsProject: spider-node
  * @BelongsPackage: cn.spider.framework.flow.consumer.business
  * @Author: dengdongsheng
- * @CreateTime: 2023-04-25  17:42
- * @Description: TODO
+ * @CreateTime: 2023-04-26  16:15
+ * @Description: 告知流程实例结束
  * @Version: 1.0
  */
 @Component
-public class EndElementExampleHandler implements InitializingBean {
+public class EndFlowExampleHandler implements InitializingBean {
+
     @Resource
     private EventBus eventBus;
 
     @Resource
-    private TranscriptManager transcriptManager;
-
-    @Resource
     private StoryEngine storyEngine;
 
-    private EventType eventType = EventType.ELEMENT_END;
+    @Resource
+    private TranscriptManager transcriptManager;
 
-    public void registerConsumer(){
+    private EventType eventType = EventType.END_FLOW_EXAMPLE;
+
+    public void registerConsumer() {
         MessageConsumer<String> consumer = eventBus.consumer(eventType.queryAddr());
         consumer.handler(message -> {
             MultiMap multiMap = message.headers();
@@ -44,16 +44,10 @@ public class EndElementExampleHandler implements InitializingBean {
             if (!transcriptManager.checkIsTranscript(brokerName)) {
                 return;
             }
-            EndElementExampleData data = JSON.parseObject(message.body(), EndElementExampleData.class);
-            if(data.getStatus().equals(ElementStatus.FAIL)){
-                return;
-            }
-            // 节点执行结束
-            this.storyEngine.getFlowExampleManager().syncTranscriptEndElementExample(data,brokerName);
+            EndFlowExampleEventData data = JSON.parseObject(message.body(), EndFlowExampleEventData.class);
+            this.storyEngine.getFlowExampleManager().syncTranscriptFlowExampleEnd(brokerName, data.getRequestId());
         });
-
     }
-
 
     @Override
     public void afterPropertiesSet() throws Exception {

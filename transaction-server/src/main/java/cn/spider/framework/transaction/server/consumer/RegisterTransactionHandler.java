@@ -1,5 +1,4 @@
 package cn.spider.framework.transaction.server.consumer;
-
 import cn.spider.framework.common.event.EventType;
 import cn.spider.framework.common.event.data.RegisterTransactionData;
 import cn.spider.framework.transaction.server.TransactionManager;

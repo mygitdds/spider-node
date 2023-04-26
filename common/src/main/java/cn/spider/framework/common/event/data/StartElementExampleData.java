@@ -49,4 +49,9 @@ public class StartElementExampleData extends EventData {
      * 节点的事务id-》唯一
      */
     private String branchId;
+
+    /**
+     * 是否需要获取下一个节点
+     */
+    private Boolean isNext;
 }

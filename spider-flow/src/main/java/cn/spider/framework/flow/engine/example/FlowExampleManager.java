@@ -3,6 +3,7 @@ package cn.spider.framework.flow.engine.example;
 import cn.spider.framework.annotation.enums.ScopeTypeEnum;
 import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.event.EventType;
+import cn.spider.framework.common.event.data.EndElementExampleData;
 import cn.spider.framework.common.event.data.EndFlowExampleEventData;
 import cn.spider.framework.common.event.data.StartElementExampleData;
 import cn.spider.framework.common.event.data.StartFlowExampleEventData;
@@ -27,15 +28,18 @@ import cn.spider.framework.flow.engine.facade.StoryRequest;
 import cn.spider.framework.flow.engine.scheduler.SchedulerManager;
 import cn.spider.framework.flow.exception.BusinessException;
 import cn.spider.framework.flow.exception.ExceptionEnum;
+import cn.spider.framework.flow.load.loader.ClassLoaderManager;
 import cn.spider.framework.flow.monitor.MonitorTracking;
 import cn.spider.framework.flow.role.Role;
 import cn.spider.framework.flow.util.*;
 import cn.spider.framework.transaction.sdk.data.RegisterTransactionRequest;
 import cn.spider.framework.transaction.sdk.data.RegisterTransactionResponse;
 import cn.spider.framework.transaction.sdk.interfaces.TransactionInterface;
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Maps;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -50,6 +54,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @Description: 管控-流程实例的生命周期
  * @Version: 1.0
  */
+@Slf4j
 public class FlowExampleManager {
     /**
      * StoryEngine 组成模块
@@ -78,6 +83,8 @@ public class FlowExampleManager {
      */
     private Map<String, Map<String, FlowExample>> followerFlowExampleMap;
 
+    private ClassLoaderManager classLoaderManager;
+
     public FlowExampleManager(StoryEngineModule storyEngineModule) {
         this.storyEngineModule = storyEngineModule;
         this.leaderFlowExampleMap = Maps.newHashMap();
@@ -91,6 +98,7 @@ public class FlowExampleManager {
         this.schedulerManager = SpringUtil.getBean(SchedulerManager.class);
         this.transactionInterface = SpringUtil.getBean(TransactionInterface.class);
         this.eventManager = SpringUtil.getBean(EventManager.class);
+        this.classLoaderManager = SpringUtil.getBean(ClassLoaderManager.class);
     }
 
     public void registerFollowerExample(StoryRequest<Object> storyRequest, String brokerName) {
@@ -130,7 +138,7 @@ public class FlowExampleManager {
      * @param elementExampleData
      * @param brokerName
      */
-    public void syncTranscriptElementExample(StartElementExampleData elementExampleData, String brokerName) {
+    public void syncTranscriptStartElementExample(StartElementExampleData elementExampleData, String brokerName) {
         if (!this.followerFlowExampleMap.containsKey(brokerName)) {
             // 进行告警
             return;
@@ -142,14 +150,56 @@ public class FlowExampleManager {
             return;
         }
         String requestId = elementExampleData.getRequestId();
-        FlowExample example = exampleMap.get(requestId);
 
-        if (!StringUtils.equals(example.getFlowElement().getId(), transactionGroupId)) {
+        FlowExample example = exampleMap.get(requestId);
+        if (elementExampleData.getIsNext()) {
+            example.nextElement();
+        }
+
+        if (!StringUtils.equals(example.getFlowElement().getId(), elementExampleData.getFlowElementId())) {
+            log.error("同步的节点requestId {} 同步节点id {} 副本实例id {}", example.getExampleId(), elementExampleData.getFlowElementId(), example.getFlowElement().getId());
             return;
         }
         ServiceTask serviceTask = (ServiceTask) example.getFlowElement();
 
         example.getTransactionGroupMap().put(serviceTask.queryTransactionGroup(), elementExampleData.getTransactionGroupId());
+    }
+
+    public void syncTranscriptEndElementExample(EndElementExampleData data, String brokerName) {
+        init();
+        if (!this.followerFlowExampleMap.containsKey(brokerName)) {
+            // 进行告警
+            return;
+        }
+        Map<String, FlowExample> exampleMap = this.followerFlowExampleMap.get(brokerName);
+        String requestId = data.getRequestId();
+        FlowExample example = exampleMap.get(requestId);
+        // 获取下一个执行节点
+        example.getFlowRegister().predictNextElementNew(example.getCsd(), example.getFlowElement());
+        ClassLoader resultClassLoader = this.classLoaderManager.queryClassLoader(data.getReturnClassType());
+        try {
+            Class resultClass = resultClassLoader.loadClass(data.getReturnClassType());
+            Object result = data.getReturnParam().mapTo(resultClass);
+            noticeResult(example, example.getFlowElement(), result);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 同步
+     *
+     * @param brokerName
+     * @param requestId
+     */
+    public void syncTranscriptFlowExampleEnd(String brokerName, String requestId) {
+        init();
+        if (!this.followerFlowExampleMap.containsKey(brokerName)) {
+            // 进行告警
+            return;
+        }
+        Map<String, FlowExample> exampleMap = this.followerFlowExampleMap.get(brokerName);
+        exampleMap.remove(requestId);
     }
 
 
@@ -225,11 +275,12 @@ public class FlowExampleManager {
                     example.getPromise().complete();
                     // 移除
                     this.leaderFlowExampleMap.remove(example.getExampleId());
+                    eventManager.sendMessage(EventType.END_FLOW_EXAMPLE, endFlowExampleEventData);
                 }).onFailure(fail -> {
                     // 记录-》写入ES
                     example.getPromise().fail(fail);
+                    eventManager.sendMessage(EventType.END_FLOW_EXAMPLE, endFlowExampleEventData);
                 });
-                eventManager.sendMessage(EventType.END_FLOW_EXAMPLE, endFlowExampleEventData);
                 return;
             }
             example.getPromise().complete();
@@ -295,6 +346,7 @@ public class FlowExampleManager {
             Future<JsonObject> transactionFuture = transaction(example, groupId, taskGroupId);
             transactionFuture.onSuccess(suss -> {
                 example.addFailTransactionGroupSuss(taskGroupId);
+
                 checkExampleTransactionIsFinish(example);
                 // 校验是否 事务完毕
             }).onFailure(fail -> {
@@ -351,20 +403,8 @@ public class FlowExampleManager {
             Object result = suss;
             // 使用变量把参数引入到该 区域内
             FlowRegister flowRegisterAsync = example.getFlowRegister();
-            StoryBus storyBusAsync = example.getStoryBus();
             FlowElement flowElementAsync = example.getFlowElement();
-            if (flowElementAsync.getElementType() == BpmnTypeEnum.SERVICE_TASK) {
-                ServiceTask serviceTask = (ServiceTask) flowElementAsync;
-                // 获取 TaskServiceDef
-                Optional<TaskServiceDef> taskServiceDefOptional = this.storyEngineModule.getTaskContainer().getTaskServiceDef(serviceTask.getTaskComponent(), serviceTask.getTaskService(), example.getRole());
-                TaskServiceDef taskServiceDef = taskServiceDefOptional.orElseThrow(() ->
-                        ExceptionUtil.buildException(null, ExceptionEnum.TASK_SERVICE_MATCH_ERROR, ExceptionEnum.TASK_SERVICE_MATCH_ERROR.getDesc()
-                                + GlobalUtil.format(" service task identity: {}", serviceTask.identity())));
-                // 校验返回结果是否属于Mono--- 当前默认不支持
-                storyBusAsync.noticeResult(serviceTask, result, taskServiceDef);
-                // 通知监控
-                flowRegisterAsync.getMonitorTracking().finishTaskTracking(flowElementAsync, null);
-            }
+            noticeResult(example, flowElementAsync, result);
             // 执行下一个节点
             try {
                 example.removeFailFlowElement(flowElementAsync.getId());
@@ -391,6 +431,21 @@ public class FlowExampleManager {
             runFlowExample(example, false);
         });
 
+    }
+
+    public void noticeResult(FlowExample example, FlowElement flowElement, Object result) {
+        if (flowElement.getElementType() == BpmnTypeEnum.SERVICE_TASK) {
+            ServiceTask serviceTask = (ServiceTask) flowElement;
+            // 获取 TaskServiceDef
+            Optional<TaskServiceDef> taskServiceDefOptional = this.storyEngineModule.getTaskContainer().getTaskServiceDef(serviceTask.getTaskComponent(), serviceTask.getTaskService(), example.getRole());
+            TaskServiceDef taskServiceDef = taskServiceDefOptional.orElseThrow(() ->
+                    ExceptionUtil.buildException(null, ExceptionEnum.TASK_SERVICE_MATCH_ERROR, ExceptionEnum.TASK_SERVICE_MATCH_ERROR.getDesc()
+                            + GlobalUtil.format(" service task identity: {}", serviceTask.identity())));
+            // 校验返回结果是否属于Mono--- 当前默认不支持
+            example.getStoryBus().noticeResult(serviceTask, result, taskServiceDef);
+            // 通知监控
+            example.getFlowRegister().getMonitorTracking().finishTaskTracking(flowElement, null);
+        }
     }
 
 

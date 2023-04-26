@@ -51,12 +51,13 @@ public class TransactionManager {
 
     private EventManager eventManager;
 
-    public TransactionManager(WorkerExecutor workerExecutor, RedisTemplate redisEnv, LinkerService linkerService, RocksdbUtil rocksdbUtil) {
+    public TransactionManager(WorkerExecutor workerExecutor, RedisTemplate redisEnv, LinkerService linkerService, RocksdbUtil rocksdbUtil, EventManager eventManager) {
         this.workerExecutor = workerExecutor;
         this.linkerService = linkerService;
         this.cacheMap = new HashMap<>();
         this.redisEnv = redisEnv;
         this.rocksdbUtil = rocksdbUtil;
+        this.eventManager = eventManager;
     }
 
     public void registerSyncTransaction(String requestId, String groupId, String taskId, String workerName) {
@@ -103,7 +104,7 @@ public class TransactionManager {
 
     public void transactionOperate(String groupId, Promise<JsonObject> promise, TransactionalType transactionalType) {
 
-        RocksDbMap rocksDbMap = cacheMap.containsKey(groupId) ? cacheMap.get(groupId) : new RocksDbMap(groupId, rocksdbUtil);
+        RocksDbMap rocksDbMap = cacheMap.containsKey(groupId) ? cacheMap.get(groupId) : new RocksDbMap(groupId, this.rocksdbUtil);
 
         List<TransactionExample> examples = rocksDbMap.getAll(TransactionExample.class);
 

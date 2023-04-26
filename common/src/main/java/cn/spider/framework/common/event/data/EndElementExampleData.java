@@ -1,5 +1,6 @@
 package cn.spider.framework.common.event.data;
 
+import cn.spider.framework.common.event.enums.ElementStatus;
 import io.vertx.core.json.JsonObject;
 import lombok.Builder;
 import lombok.Data;
@@ -32,6 +33,11 @@ public class EndElementExampleData extends EventData {
     private JsonObject returnParam;
 
     /**
+     * 返回参数的类型
+     */
+    private String returnClassType;
+
+    /**
      * 节点执行参数
      */
     private String requestParam;
@@ -44,7 +50,7 @@ public class EndElementExampleData extends EventData {
     /**
      * 功能执行的状态
      */
-    private String status;
+    private ElementStatus status;
 
 
 }

@@ -72,7 +72,7 @@ public class TransactionGroupExample {
     }
 
     public void commit(TransactionExample example, LinkerService linkerService) {
-        System.out.println("事务被执行="+ JSON.toJSONString(example));
+        log.info("事务执行内容 {}",JSON.toJSONString(example));
         LinkerServerRequest linkerServerRequest = buildRequestEntity(example, TransactionalType.SUBMIT);
         JsonObject request = JsonObject.mapFrom(linkerServerRequest);
         Future<JsonObject>  commitResult = linkerService.submittals(request);
@@ -88,7 +88,7 @@ public class TransactionGroupExample {
 
         commitResult.onSuccess(suss -> {
             JsonObject result = suss;
-            System.out.println("事务返回的结果为"+result.toString());
+            log.info("事务返回的结果为 事务返回信息为 {}",result.toString());
             LinkerServerResponse responseNew = result.getJsonObject("data").mapTo(LinkerServerResponse.class);
             if(responseNew.getResultCode().equals(ResultCode.SUSS)){
                 log.info("事务执行成功");

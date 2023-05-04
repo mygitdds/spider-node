@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @program: spider-node
@@ -54,24 +55,17 @@ public class ClientRegisterCenter {
         clientInfo.setServerVertxStub(serverVertxStub);
         List<ClientInfo> clientInfos = clientMap.get(clientInfo.getWorkerName());
         clientInfos.add(clientInfo);
-        ipWorkerInsinuate.put(clientInfo.getRemoteAddress(), clientInfo.getWorkerName());
+        ipWorkerInsinuate.put(clientInfo.getIp(), clientInfo.getWorkerName());
         // 建立长连接-->当断开的时候,及时去除ClientInfo
     }
 
     public void destroy(String ip) {
         String workerName = ipWorkerInsinuate.get(ip);
         List<ClientInfo> clientInfos = clientMap.get(workerName);
-        for (int i = 0; i < clientInfos.size(); i++) {
-            ClientInfo clientInfo = clientInfos.get(i);
-            if (!StringUtils.equals(clientInfo.getHostName(), ip)) {
-                continue;
-            }
-            clientInfos.remove(i);
-            // 移除隐射关系
-            ipWorkerInsinuate.remove(ip);
-            break;
-        }
-
+        List<ClientInfo> clientInfosNew = clientInfos.stream().filter(item-> !item.getIp().equals(ip)).collect(Collectors.toList());
+        clientMap.put(workerName,clientInfosNew);
+        // 移除隐射关系
+        ipWorkerInsinuate.remove(ip);
     }
 
     public ClientInfo queryClientInfo(String workerName) {

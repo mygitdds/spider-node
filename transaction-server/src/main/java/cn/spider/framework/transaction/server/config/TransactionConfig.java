@@ -2,7 +2,6 @@ package cn.spider.framework.transaction.server.config;
 
 import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
-import cn.spider.framework.common.utils.SpringUtil;
 import cn.spider.framework.db.config.DbRedisConfig;
 import cn.spider.framework.db.config.DbRocksConfig;
 import cn.spider.framework.db.util.RocksdbUtil;
@@ -12,6 +11,7 @@ import cn.spider.framework.transaction.server.TransactionServerVerticle;
 import cn.spider.framework.transaction.server.transcript.TranscriptManager;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
+import io.vertx.core.eventbus.EventBus;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -44,13 +44,6 @@ public class TransactionConfig {
         return new TransactionManager(workerExecutor, redisEnv, linkerService, rocksdbUtil,eventManager);
     }
 
-    @Bean("springUtil")
-    public SpringUtil buildSpringUtil(ApplicationContext applicationContext) {
-        SpringUtil springUtil = new SpringUtil();
-        springUtil.setApplicationContext(applicationContext);
-        return springUtil;
-    }
-
     @Bean
     public LinkerService buildLinkerService(Vertx vertx) {
         return LinkerService.createProxy(vertx, BrokerInfoUtil.queryBrokerName(vertx) + LinkerService.ADDRESS);
@@ -74,6 +67,11 @@ public class TransactionConfig {
     @Bean
     public EventManager buildEventManager(Vertx vertx){
         return new EventManager(vertx);
+    }
+
+    @Bean
+    public EventBus buildEventBus(Vertx vertx){
+        return vertx.eventBus();
     }
 
 }

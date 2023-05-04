@@ -4,6 +4,7 @@ import cn.spider.framework.common.config.Constant;
 import cn.spider.framework.common.role.BrokerRole;
 import io.vertx.core.Vertx;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.redis.core.RedisTemplate;
 
 /**
@@ -15,8 +16,8 @@ import org.springframework.data.redis.core.RedisTemplate;
  * @Version: 1.0
  */
 public class LeaderUtil {
-    public static BrokerRole queryBrokerRole(Vertx vertx) {
-        RedisTemplate<String,String> redisTemplate = SpringUtil.getBean(RedisTemplate.class);
+    public static BrokerRole queryBrokerRole(Vertx vertx, ApplicationContext applicationContext) {
+        RedisTemplate<String,String> redisTemplate = applicationContext.getBean(RedisTemplate.class);
         String leaderName = redisTemplate.opsForValue().get(Constant.LEADER_CONFIG_KEY);
         String brokerName = BrokerInfoUtil.queryBrokerName(vertx);
         return StringUtils.equals(leaderName, brokerName) ? BrokerRole.LEADER : BrokerRole.FOLLOWER;

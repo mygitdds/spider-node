@@ -5,6 +5,7 @@ import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.db.util.RocksdbUtil;
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.json.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.rocksdb.RocksDBException;
 
@@ -19,7 +20,8 @@ import java.util.Map;
  * @Description: 使用rocksdb进行存储
  * @Version: 1.0
  */
-public class RocksdbBusinessMap<k,v> extends HashMap {
+@Slf4j
+public class RocksdbBusinessMap<k, v> extends HashMap {
 
     private RocksdbUtil rocksdbUtil;
 
@@ -30,11 +32,11 @@ public class RocksdbBusinessMap<k,v> extends HashMap {
 
     private final String VALUE = "VALUE";
 
-    private Map<String,ClassLoader> classLoaderMap;
+    private Map<String, ClassLoader> classLoaderMap;
 
-    private Map<String,Object> inScopeDataMap;
+    private Map<String, Object> inScopeDataMap;
 
-    public RocksdbBusinessMap(RocksdbUtil rocksdbUtil, String cfName,Map<String,ClassLoader> classLoaderMap){
+    public RocksdbBusinessMap(RocksdbUtil rocksdbUtil, String cfName, Map<String, ClassLoader> classLoaderMap) {
         this.rocksdbUtil = rocksdbUtil;
         this.cfName = cfName;
         this.classLoaderMap = classLoaderMap;
@@ -44,29 +46,29 @@ public class RocksdbBusinessMap<k,v> extends HashMap {
 
     public Object get(Object key) {
         try {
-            String object = rocksdbUtil.get(cfName,(String) key);
-            if(StringUtils.isEmpty(object)){
+            String object = rocksdbUtil.get(cfName, (String) key);
+            if (StringUtils.isEmpty(object)) {
                 return null;
             }
 
             JsonObject jsonObject = new JsonObject(object);
             String className = jsonObject.getString(OBJECT_TYPE);
             // 判断类的对象路径为域对象的情况下，需要判断他是否为空
-            if(className.equals("cn.spider.framework.flow.bus.InScopeData")){
-                if(jsonObject.getString(VALUE).equals("{}")){
+            if (className.equals("cn.spider.framework.flow.bus.InScopeData")) {
+                if (jsonObject.getString(VALUE).equals("{}")) {
                     return this.inScopeDataMap.get(className);
                 }
             }
 
             ClassLoader classLoader = this.classLoaderMap.get(className);
-            Class objectClass = Class.forName(className,false,classLoader);
+            Class objectClass = Class.forName(className, false, classLoader);
             Object result = CheckBaseClassUtil.checkBaseClassType(className) ?
                     jsonObject.getString(VALUE) :
                     JSON.parseObject(jsonObject.getString(VALUE), objectClass);
 
             return result;
         } catch (Exception e) {
-            System.out.println(ExceptionMessage.getStackTrace(e));
+            log.error(ExceptionMessage.getStackTrace(e));
             throw new RuntimeException(e);
         }
     }
@@ -80,22 +82,22 @@ public class RocksdbBusinessMap<k,v> extends HashMap {
      */
     public Object put(Object key, Object value) {
         String className = value.getClass().getName();
-        if(className.equals("cn.spider.framework.flow.bus.InScopeData")){
-            if(JSON.toJSONString(value).equals("{}")){
-                System.out.println("对象为空 cn.spider.framework.flow.bus.InScopeData");
-                this.inScopeDataMap.put(className,value);
-            }else {
+        if (className.equals("cn.spider.framework.flow.bus.InScopeData")) {
+            if (JSON.toJSONString(value).equals("{}")) {
+                log.info("对象为空 cn.spider.framework.flow.bus.InScopeData");
+                this.inScopeDataMap.put(className, value);
+            } else {
                 this.inScopeDataMap.remove(className);
             }
         }
         JsonObject valueJson = new JsonObject()
-                .put(OBJECT_TYPE,className)
-                .put(VALUE,value instanceof String ? value : JSON.toJSONString(value));
+                .put(OBJECT_TYPE, className)
+                .put(VALUE, value instanceof String ? value : JSON.toJSONString(value));
 
         try {
-            rocksdbUtil.put(cfName,(String) key,valueJson.toString());
-            if(!classLoaderMap.containsKey(className)){
-                this.classLoaderMap.put(className,value.getClass().getClassLoader());
+            rocksdbUtil.put(cfName, (String) key, valueJson.toString());
+            if (!classLoaderMap.containsKey(className)) {
+                this.classLoaderMap.put(className, value.getClass().getClassLoader());
             }
         } catch (RocksDBException e) {
             throw new RuntimeException(e);
@@ -112,7 +114,7 @@ public class RocksdbBusinessMap<k,v> extends HashMap {
      */
     public Object remove(Object key) {
         try {
-            rocksdbUtil.delete(cfName,(String) key);
+            rocksdbUtil.delete(cfName, (String) key);
         } catch (RocksDBException e) {
             throw new RuntimeException(e);
         }

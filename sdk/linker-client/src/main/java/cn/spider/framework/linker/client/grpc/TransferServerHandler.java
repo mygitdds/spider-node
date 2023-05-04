@@ -115,7 +115,6 @@ public class TransferServerHandler {
                                         .build();
                                 log.info("执行的功能信息 {} 返回结果为 {}", body, JSON.toJSONString(response));
                             } catch (Exception e) {
-                                System.out.println("异常信息为=" + ExceptionMessage.getStackTrace(e));
                                 log.error("执行的功能信息 {} 异常信息为 {}", body, ExceptionMessage.getStackTrace(e));
                                 // 异常信息给到返回值当中
                                 message = ExceptionMessage.getStackTrace(e);
@@ -134,10 +133,10 @@ public class TransferServerHandler {
         // start the server
         server.start(ar -> {
             if (ar.failed()) {
-                System.out.println("执行失败");
+                log.error("执行失败");
             } else {
                 // 发布成功
-                System.out.println("发布成功");
+                log.info("发布成功");
             }
         });
     }

@@ -3,8 +3,10 @@ package cn.spider.framework.common.event.data;
 import cn.spider.framework.common.event.enums.FlowExampleStatus;
 import cn.spider.framework.common.event.enums.TransactionStatus;
 import io.vertx.core.json.JsonObject;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @BelongsProject: spider-node
@@ -14,6 +16,8 @@ import lombok.Data;
  * @Description: TODO
  * @Version: 1.0
  */
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 @Data
 public class EndFlowExampleEventData extends EventData{

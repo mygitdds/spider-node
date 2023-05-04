@@ -1,10 +1,7 @@
 package cn.spider.framework.db.util;
-
-import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.rocksdb.*;
-
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;

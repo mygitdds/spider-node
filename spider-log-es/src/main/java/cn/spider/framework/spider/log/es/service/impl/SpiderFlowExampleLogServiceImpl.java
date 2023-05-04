@@ -2,23 +2,20 @@ package cn.spider.framework.spider.log.es.service.impl;
 import cn.spider.framework.log.sdk.data.FlowExample;
 import cn.spider.framework.log.sdk.data.QueryFlowExample;
 import cn.spider.framework.log.sdk.data.QueryFlowExampleResponse;
-import cn.spider.framework.spider.log.es.dao.SpiderFlowExampleLogDao;
-import cn.spider.framework.spider.log.es.domain.SpiderFlowExampleLog;
+import cn.spider.framework.spider.log.es.client.CustomEsClient;
+import cn.spider.framework.spider.log.es.client.EsIndexTypeId;
+import cn.spider.framework.spider.log.es.client.PageEsData;
+import cn.spider.framework.spider.log.es.config.Constant;
 import cn.spider.framework.spider.log.es.service.SpiderFlowExampleLogService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.springframework.beans.BeanUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * @BelongsProject: spider-node
@@ -32,43 +29,36 @@ import java.util.stream.Collectors;
 public class SpiderFlowExampleLogServiceImpl implements SpiderFlowExampleLogService {
 
     @Resource
-    private SpiderFlowExampleLogDao exampleLogDao;
+    private CustomEsClient client;
+
 
     /**
      * 批量新增
      *
      * @param logs
      */
-    public void upsetBatchFlowExampleLog(List<SpiderFlowExampleLog> logs) {
+    public void upsetBatchFlowExampleLog(List<EsIndexTypeId> logs) {
 
         if (CollectionUtils.isEmpty(logs)) {
             return;
         }
-        exampleLogDao.saveAll(logs);
+        client.upsertAll(logs);
     }
 
 
     public QueryFlowExampleResponse queryFlowExampleLog(QueryFlowExample queryFlowExample){
-        SearchQuery query = buildFlowExample(queryFlowExample);
-        Page<SpiderFlowExampleLog> page = exampleLogDao.search(query);
-        QueryFlowExampleResponse exampleResponse = new QueryFlowExampleResponse();
-        if(page.isEmpty()){
-            return exampleResponse;
-        }
-        List<FlowExample> flowExampleList = page.stream().map(item->{
-            FlowExample flowExample = new FlowExample();
-            BeanUtils.copyProperties(item,flowExample);
-            return flowExample;
-        }).collect(Collectors.toList());
+        QueryFlowExampleResponse response = new QueryFlowExampleResponse();
+        PageEsData<FlowExample> page = client.searchPage(buildFlowExample(queryFlowExample),
+                Constant.SPIDER_FLOW_ELEMENT_EXAMPLE_LOG_INDEX,Constant.SPIDER_FLOW_ELEMENT_EXAMPLE_LOG_TYPE,FlowExample.class);
 
-        exampleResponse.setFlowExampleList(flowExampleList);
-        exampleResponse.setTotal(page.getTotalPages());
-        return exampleResponse;
+        response.setTotal(page.getTotalRows());
+        response.setFlowExampleList(page.getData());
+        return response;
     }
 
-    private SearchQuery buildFlowExample(QueryFlowExample queryFlowExample) {
+    private SearchSourceBuilder buildFlowExample(QueryFlowExample queryFlowExample) {
 
-        Pageable pageable = new PageRequest(queryFlowExample.getPage(), queryFlowExample.getSize());
+        SearchSourceBuilder searchSourceBuilder = SearchSourceBuilder.searchSource();
 
         BoolQueryBuilder defaultQueryBuilder = QueryBuilders.boolQuery();
         if (StringUtils.isNotEmpty(queryFlowExample.getBusinessParam())) {
@@ -104,10 +94,9 @@ public class SpiderFlowExampleLogServiceImpl implements SpiderFlowExampleLogServ
             defaultQueryBuilder.should(QueryBuilders.rangeQuery("takeTime").lt(queryFlowExample.getGtTakeTime()));
         }
 
-
-        return new NativeSearchQueryBuilder()
-                .withQuery(defaultQueryBuilder)
-                .withPageable(pageable)
-                .build();
+        searchSourceBuilder.query(defaultQueryBuilder);
+        searchSourceBuilder.size(queryFlowExample.getSize());
+        searchSourceBuilder.from(queryFlowExample.getPage());
+        return searchSourceBuilder;
     }
 }

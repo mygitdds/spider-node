@@ -21,10 +21,12 @@ import cn.spider.framework.transaction.sdk.datasource.isolate.TransactionOperati
 import cn.spider.framework.transaction.sdk.datasource.undo.UndoLogManager;
 import cn.spider.framework.transaction.sdk.datasource.undo.UndoLogManagerFactory;
 import cn.spider.framework.transaction.sdk.thread.NamedThreadFactory;
+import cn.spider.framework.transaction.sdk.util.CollectionUtils;
 import cn.spider.framework.transaction.sdk.util.IOUtil;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
@@ -132,13 +134,24 @@ public class AsyncWorker {
         try {
             conn = dataSourceProxy.getPlainConnection();
             UndoLogManager undoLogManager = UndoLogManagerFactory.getUndoLogManager(dataSourceProxy.getDbType());
+
             // split contexts into several lists, with each list contain no more element than limit size
             List<List<Phase2Context>> splitByLimit = Lists.partition(contexts, UNDOLOG_DELETE_LIMIT_SIZE);
             for (List<Phase2Context> partition : splitByLimit) {
                 // 修改操作数据状态
                 try {
-                    isolateManager.updateDataValidStatus(partition, undoLogManager, conn, TransactionOperationStatus.COMMIT);
-                    deleteUndoLog(conn, undoLogManager, partition);
+                    List<Phase2Context> partitionNew = Lists.newArrayList();
+                    for (Phase2Context phase2Context : partition) {
+                        if (!undoLogManager.checkUndoLogExist(phase2Context.xid, phase2Context.branchId, conn)) {
+                            continue;
+                        }
+                        partitionNew.add(phase2Context);
+                    }
+                    if (CollectionUtils.isEmpty(partitionNew)) {
+                        continue;
+                    }
+                    isolateManager.updateDataValidStatus(partitionNew, undoLogManager, conn, TransactionOperationStatus.COMMIT);
+                    deleteUndoLog(conn, undoLogManager, partitionNew);
                 } catch (Exception e) {
                     e.printStackTrace();
                     conn.rollback();

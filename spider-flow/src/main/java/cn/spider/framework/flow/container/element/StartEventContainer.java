@@ -20,6 +20,7 @@ package cn.spider.framework.flow.container.element;
 import cn.spider.framework.flow.bpmn.StartEvent;
 import cn.spider.framework.flow.bus.ScopeDataQuery;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -36,4 +37,6 @@ public interface StartEventContainer {
      * @return 开始事件
      */
     Optional<StartEvent> getStartEventById(ScopeDataQuery scopeDataQuery);
+
+    void refreshStartEvent(List<StartEvent> resourceList);
 }

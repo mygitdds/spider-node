@@ -3,6 +3,7 @@ package cn.spider.framework.spider.log.es.service;
 
 import cn.spider.framework.log.sdk.data.QueryFlowExample;
 import cn.spider.framework.log.sdk.data.QueryFlowExampleResponse;
+import cn.spider.framework.spider.log.es.client.EsIndexTypeId;
 import cn.spider.framework.spider.log.es.domain.SpiderFlowExampleLog;
 
 import java.util.List;
@@ -18,7 +19,7 @@ import java.util.List;
 
 public interface SpiderFlowExampleLogService {
 
-    void upsetBatchFlowExampleLog(List<SpiderFlowExampleLog> logs);
+    void upsetBatchFlowExampleLog(List<EsIndexTypeId> logs);
 
 
     QueryFlowExampleResponse queryFlowExampleLog(QueryFlowExample queryFlowExample);

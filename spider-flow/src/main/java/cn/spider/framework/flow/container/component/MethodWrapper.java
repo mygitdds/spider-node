@@ -16,7 +16,6 @@
  *
  */
 package cn.spider.framework.flow.container.component;
-
 import cn.spider.framework.annotation.*;
 import cn.spider.framework.annotation.enums.ScopeTypeEnum;
 import cn.spider.framework.flow.bus.InstructContent;
@@ -32,25 +31,23 @@ import cn.spider.framework.flow.util.ElementParserUtil;
 import cn.spider.framework.flow.util.GlobalUtil;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.DefaultParameterNameDiscoverer;
-import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
 import reactor.core.publisher.Mono;
-
 import javax.annotation.Nonnull;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
 
 /**
  * @author lykan
  */
+@Slf4j
 public class MethodWrapper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodWrapper.class);
@@ -136,7 +133,7 @@ public class MethodWrapper {
         Parameter[] parameters = method.getParameters();
         // 获取到对应的接口-方法参数名称
         String[] parameterNames = queryParameterNames(parameters);
-        System.out.println("加载的参数为="+ JSON.toJSONString(parameterNames));
+        log.info("加载的参数为 {}",JSON.toJSONString(parameterNames));
         if (ArrayUtils.isNotEmpty(parameters)) {
             AssertUtil.isTrue(parameterNames != null && Objects.equals(parameters.length, parameterNames.length), ExceptionEnum.SERVICE_PARAM_ERROR,
                     "The actual parameters of the method do not match the number of parameters resolved by the method entry name. except: {}, actual: {}",

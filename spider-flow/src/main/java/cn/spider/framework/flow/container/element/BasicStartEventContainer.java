@@ -22,8 +22,10 @@ import cn.spider.framework.flow.bus.ScopeDataQuery;
 import cn.spider.framework.flow.container.processor.StartEventProcessor;
 import cn.spider.framework.flow.resource.factory.StartEventFactory;
 import cn.spider.framework.flow.util.AssertUtil;
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -40,6 +42,7 @@ import java.util.Optional;
  *
  * @author lykan
  */
+@Slf4j
 public class BasicStartEventContainer implements StartEventContainer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicStartEventContainer.class);
@@ -60,6 +63,7 @@ public class BasicStartEventContainer implements StartEventContainer {
         AssertUtil.anyNotNull(startEventFactory, startEventProcessor);
         this.startEventFactory = startEventFactory;
         this.startEventProcessor = startEventProcessor;
+        this.globalStartEventMap = Maps.newHashMap();
     }
 
     @PostConstruct
@@ -68,11 +72,18 @@ public class BasicStartEventContainer implements StartEventContainer {
         Map<String, StartEvent> startEventMap = Maps.newHashMap();
         if (CollectionUtils.isEmpty(resourceList)) {
             LOGGER.warn("No bpmn configuration information available!");
-            this.globalStartEventMap = ImmutableMap.copyOf(startEventMap);
             return;
         }
         resourceList.stream().map(event -> startEventProcessor.postStartEvent(event).orElse(null)).filter(Objects::nonNull).forEach(event -> startEventMap.put(event.getId(), event));
-        this.globalStartEventMap = ImmutableMap.copyOf(startEventMap);
+        this.globalStartEventMap.putAll(startEventMap);
+    }
+
+    public void refreshStartEvent(List<StartEvent> resourceList) {
+        log.info("refreshStartEvent-startEvent {}", JSON.toJSONString(resourceList));
+        Map<String, StartEvent> startEventMap = Maps.newHashMap();
+        resourceList.stream().map(event -> startEventProcessor.postStartEvent(event).orElse(null)).filter(Objects::nonNull).forEach(event -> startEventMap.put(event.getId(), event));
+        this.globalStartEventMap.putAll(startEventMap);
+        log.info("refreshStartEvent-globalStartEventMap {}", JSON.toJSONString(globalStartEventMap));
     }
 
     @Override

@@ -25,27 +25,29 @@ import cn.spider.framework.flow.component.bpmn.BpmnDiagramRegister;
 import cn.spider.framework.flow.component.bpmn.builder.SubProcessLink;
 import cn.spider.framework.flow.component.bpmn.link.ProcessLink;
 import cn.spider.framework.flow.component.dynamic.ProcessDynamicComponent;
+import cn.spider.framework.flow.container.element.BasicStartEventContainer;
+import cn.spider.framework.flow.container.element.StartEventContainer;
 import cn.spider.framework.flow.enums.ResourceTypeEnum;
 import cn.spider.framework.flow.exception.ExceptionEnum;
 import cn.spider.framework.flow.resource.config.BpmnConfigResource;
 import cn.spider.framework.flow.resource.config.ConfigResource;
-import cn.spider.framework.flow.util.AssertUtil;
-import cn.spider.framework.flow.util.ElementParserUtil;
-import cn.spider.framework.flow.util.ExceptionUtil;
-import cn.spider.framework.flow.util.GlobalUtil;
+import cn.spider.framework.flow.util.*;
 import com.alibaba.fastjson.JSON;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -66,6 +68,8 @@ public class StartEventFactory extends BasicResourceFactory<StartEvent> {
     public StartEventFactory(ApplicationContext applicationContext, ProcessDynamicComponent processDynamicComponent) {
         super(applicationContext);
         this.processDynamicComponent = processDynamicComponent;
+        this.allSubProcessMap = new HashMap<>();
+        this.resourceList = new ArrayList<>();
     }
 
     /**
@@ -76,31 +80,31 @@ public class StartEventFactory extends BasicResourceFactory<StartEvent> {
         List<ConfigResource> configResourceList = getConfigResource(ResourceTypeEnum.BPMN);
         List<ConfigResource> diagramConfigResourceList = getConfigResource(ResourceTypeEnum.BPMN_DIAGRAM);
         if (CollectionUtils.isEmpty(configResourceList) && CollectionUtils.isEmpty(diagramConfigResourceList)) {
-            this.resourceList = Lists.newArrayList();
             return;
         }
 
         List<BpmnConfigResource> bpmnResourceList =
                 configResourceList.stream().map(c -> GlobalUtil.transferNotEmpty(c, BpmnConfigResource.class)).collect(Collectors.toList());
 
-        System.out.println("加载成功的 bpmnResourceList功能"+JSON.toJSONString(bpmnResourceList));
+        log.info("加载成功的 bpmnResourceList功能 {}", JSON.toJSONString(bpmnResourceList));
         List<BpmnDiagramRegister> bpmnDiagramResourceList =
                 diagramConfigResourceList.stream().map(r -> GlobalUtil.transferNotEmpty(r, BpmnDiagramRegister.class)).collect(Collectors.toList());
         Map<String, SubProcess> aspMap = getAllSubProcessMap(bpmnResourceList, bpmnDiagramResourceList);
         List<StartEvent> list = getStartEvents(aspMap, bpmnResourceList, bpmnDiagramResourceList);
         notDuplicateCheck(list);
-        this.resourceList = Collections.unmodifiableList(list);
-        this.allSubProcessMap = ImmutableMap.copyOf(aspMap);
-        log.info("加载成功的 bpmn功能 {}",JSON.toJSONString(resourceList));
-        log.info("加载成功的 allSubProcessMap功能 {}",JSON.toJSONString(allSubProcessMap));
+        this.resourceList.addAll(list);
+        this.allSubProcessMap.putAll(aspMap);
+        log.info("加载成功的 bpmn功能 {}", JSON.toJSONString(resourceList));
+        log.info("加载成功的 allSubProcessMap功能 {}", JSON.toJSONString(allSubProcessMap));
     }
 
     /**
      * 动态加载bmpm文件到内核中来
+     *
      * @param bpmnName 指定的bpmn名称
      */
     public void dynamicsLoaderBpmn(String bpmnName) {
-        List<ConfigResource> configResourceList = getConfigResource(ResourceTypeEnum.APPOINT_BPMN,bpmnName);
+        List<ConfigResource> configResourceList = getConfigResource(ResourceTypeEnum.APPOINT_BPMN, bpmnName);
         if (CollectionUtils.isEmpty(configResourceList)) {
             return;
         }
@@ -108,16 +112,21 @@ public class StartEventFactory extends BasicResourceFactory<StartEvent> {
         List<BpmnConfigResource> bpmnResourceList =
                 configResourceList.stream().map(c -> GlobalUtil.transferNotEmpty(c, BpmnConfigResource.class)).collect(Collectors.toList());
 
-        if(CollectionUtils.isEmpty(bpmnResourceList)){
+        if (CollectionUtils.isEmpty(bpmnResourceList)) {
             return;
         }
 
-        Map<String, SubProcess> aspMap = getAllSubProcessMap(bpmnResourceList,null);
+        Map<String, SubProcess> aspMap = getAllSubProcessMap(bpmnResourceList, null);
 
         List<StartEvent> startEventList = getStartEvents(aspMap, bpmnResourceList, null);
-        log.info("动态加载的 StartEvent {}",JSON.toJSONString(startEventList));
-        this.allSubProcessMap.putAll(aspMap);
+        log.info("动态加载的 StartEvent {}", JSON.toJSONString(startEventList));
+        Set<String> startIds = startEventList.stream().map(StartEvent::getId).collect(Collectors.toSet());
+        this.resourceList = this.resourceList.stream().filter(item -> !startIds.contains(item.getId())).collect(Collectors.toList());
         this.resourceList.addAll(startEventList);
+        this.allSubProcessMap.putAll(aspMap);
+        // 刷新bms相关数据
+        StartEventContainer startEventContainer = SpringUtil.getBean(BasicStartEventContainer.class);
+        startEventContainer.refreshStartEvent(startEventList);
     }
 
 
@@ -145,7 +154,7 @@ public class StartEventFactory extends BasicResourceFactory<StartEvent> {
     private List<StartEvent> getStartEvents(Map<String, SubProcess> allSubProcess, List<BpmnConfigResource> bpmnResourceList, List<BpmnDiagramRegister> bpmnDiagramResourceList) {
         List<StartEvent> startEventList = bpmnResourceList.stream().flatMap(bpmnResource ->
                 bpmnResource.getStartEventList().stream()).peek(startEvent -> ElementParserUtil.fillSubProcess(allSubProcess, startEvent)).collect(Collectors.toList());
-        if(!CollectionUtils.isEmpty(bpmnDiagramResourceList)){
+        if (!CollectionUtils.isEmpty(bpmnDiagramResourceList)) {
             bpmnDiagramResourceList.forEach(bpmnDiagramRegister -> {
                 List<ProcessLink> processLinkList = Lists.newArrayList();
                 bpmnDiagramRegister.registerDiagram(processLinkList);
@@ -182,7 +191,7 @@ public class StartEventFactory extends BasicResourceFactory<StartEvent> {
                 allSubProcess.put(k, v.getSubProcess());
             });
         });
-        if(!CollectionUtils.isEmpty(bpmnDiagramResourceList)){
+        if (!CollectionUtils.isEmpty(bpmnDiagramResourceList)) {
             bpmnDiagramResourceList.forEach(diagramConfig -> {
                 List<SubProcessLink> subLinkBuilderList = Lists.newArrayList();
                 diagramConfig.registerSubDiagram(subLinkBuilderList);

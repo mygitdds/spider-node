@@ -1,5 +1,5 @@
 package cn.spider.framework.flow.load.loader;
-import cn.spider.framework.common.utils.SpringUtil;
+import cn.spider.framework.flow.SpiderCoreVerticle;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ResourceUtils;
@@ -57,15 +57,12 @@ public class HotClassLoader extends URLClassLoader {
      */
     public List<Class> loadJar(String jarPath,HotClassLoader classLoader) throws Exception{
 
-        System.out.println("-------------------------------");
-
-
         /**拿到jar文件对象*/
         File file = jarPath.startsWith("classpath:") ? ResourceUtils.getFile(jarPath) : new File(jarPath);
 
         /**获取新的类加载器*/
         if (classLoader == null){
-            classLoader = SpringUtil.getBean(HotClassLoader.class);
+            classLoader = SpiderCoreVerticle.factory.getBean(HotClassLoader.class);
         }
         try {
             if (jarPath.startsWith("classpath:")) {

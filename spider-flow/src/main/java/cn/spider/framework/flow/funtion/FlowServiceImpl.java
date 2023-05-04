@@ -4,7 +4,6 @@ import cn.spider.framework.annotation.enums.ScopeTypeEnum;
 import cn.spider.framework.common.utils.IdWorker;
 import cn.spider.framework.common.utils.SnowFlake;
 import cn.spider.framework.common.utils.SnowIdDto;
-import cn.spider.framework.common.utils.SpringUtil;
 import cn.spider.framework.container.sdk.data.StartFlowRequest;
 import cn.spider.framework.flow.bus.InScopeData;
 import cn.spider.framework.flow.business.BusinessManager;
@@ -17,18 +16,14 @@ import cn.spider.framework.flow.engine.facade.ReqBuilder;
 import cn.spider.framework.flow.engine.facade.StoryRequest;
 import cn.spider.framework.flow.load.loader.ClassLoaderManager;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
 import java.util.Objects;
-import java.util.UUID;
 
 /**
  * @BelongsProject: spider-node

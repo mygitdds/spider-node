@@ -3,14 +3,12 @@ package cn.spider.framework.flow.engine.example;
 import cn.spider.framework.annotation.enums.ScopeTypeEnum;
 import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.event.EventType;
-import cn.spider.framework.common.event.data.EndElementExampleData;
-import cn.spider.framework.common.event.data.EndFlowExampleEventData;
-import cn.spider.framework.common.event.data.StartElementExampleData;
-import cn.spider.framework.common.event.data.StartFlowExampleEventData;
+import cn.spider.framework.common.event.data.*;
 import cn.spider.framework.common.event.enums.FlowExampleStatus;
 import cn.spider.framework.common.utils.*;
 import cn.spider.framework.db.map.RocksDbMap;
 import cn.spider.framework.db.util.RocksdbUtil;
+import cn.spider.framework.flow.SpiderCoreVerticle;
 import cn.spider.framework.flow.bpmn.FlowElement;
 import cn.spider.framework.flow.bpmn.ServiceTask;
 import cn.spider.framework.flow.bpmn.StartEvent;
@@ -89,16 +87,38 @@ public class FlowExampleManager {
         this.storyEngineModule = storyEngineModule;
         this.leaderFlowExampleMap = Maps.newHashMap();
         this.followerFlowExampleMap = Maps.newHashMap();
+
     }
 
     public void init() {
         if (Objects.nonNull(this.schedulerManager)) {
             return;
         }
-        this.schedulerManager = SpringUtil.getBean(SchedulerManager.class);
-        this.transactionInterface = SpringUtil.getBean(TransactionInterface.class);
-        this.eventManager = SpringUtil.getBean(EventManager.class);
-        this.classLoaderManager = SpringUtil.getBean(ClassLoaderManager.class);
+        this.schedulerManager = SpiderCoreVerticle.factory.getBean(SchedulerManager.class);
+        this.transactionInterface = SpiderCoreVerticle.factory.getBean(TransactionInterface.class);
+        this.eventManager = SpiderCoreVerticle.factory.getBean(EventManager.class);
+        this.classLoaderManager = SpiderCoreVerticle.factory.getBean(ClassLoaderManager.class);
+    }
+
+    public void transcriptReplace(LeaderReplaceData replaceData) {
+        Map<String, FlowExample> flowExampleMap = this.followerFlowExampleMap.get(replaceData.getOldLeaderTransaction());
+        this.followerFlowExampleMap.remove(replaceData.getOldLeaderTransaction());
+        this.followerFlowExampleMap.put(replaceData.getNewLeaderTransaction(), flowExampleMap);
+    }
+
+    /**
+     * 把副本信息转正
+     *
+     * @param brokerName
+     */
+    public void become(String brokerName) {
+        Map<String, FlowExample> flowExampleMap = this.followerFlowExampleMap.get(brokerName);
+        flowExampleMap.forEach((key, value) -> {
+            FlowExample example = value;
+            this.leaderFlowExampleMap.put(value.getExampleId(), example);
+            runFlowExample(example, true);
+        });
+        this.followerFlowExampleMap.remove(brokerName);
     }
 
     public void registerFollowerExample(StoryRequest<Object> storyRequest, String brokerName) {
@@ -209,6 +229,7 @@ public class FlowExampleManager {
      * @return FlowExample
      */
     public FlowExample registerExample(StoryRequest<Object> storyRequest) {
+        init();
         Role role = storyRequest.getRole();
         ScopeDataQuery scopeDataQuery = getScopeDataQuery(storyRequest);
         FlowRegister flowRegister = getFlowRegister(storyRequest, scopeDataQuery);
@@ -217,6 +238,7 @@ public class FlowExampleManager {
         storyRequest.setRequestId(exampleId);
         FlowExample example = FlowExample.builder()
                 .exampleId(exampleId)
+                .requestId(exampleId)
                 .flowRegister(flowRegister)
                 .functionId(storyRequest.getFunctionId())
                 .functionName(storyRequest.getFunctionName())
@@ -241,7 +263,7 @@ public class FlowExampleManager {
                 .startId(flowRegister.getStartEventId())
                 .build();
         //发送事件
-        eventManager.sendMessage(EventType.START_FLOW_EXAMPLE, eventData);
+      //  eventManager.sendMessage(EventType.START_FLOW_EXAMPLE, eventData);
         runFlowExample(example, true);
         return example;
     }
@@ -254,13 +276,16 @@ public class FlowExampleManager {
         if (isNext) {
             example.nextElement();
         }
+        log.info("当前执行的requestId {}",example.getRequestId());
         if (Objects.isNull(example.getFlowElement())) {
+            log.info("当前执行的 requestId 执行节点为空",example.getRequestId());
             return;
         }
 
         FlowElement flowElement = example.getFlowElement();
         // 说明流程结束
         if (flowElement.getElementType() == BpmnTypeEnum.END_EVENT) {
+            log.info("当前执行的结束的requestId {}",example.getRequestId());
             Object result = ResultUtil.buildObject(example.getStoryBus());
             EndFlowExampleEventData endFlowExampleEventData = EndFlowExampleEventData.builder()
                     .status(FlowExampleStatus.SUSS)
@@ -291,6 +316,7 @@ public class FlowExampleManager {
         }
 
         if (flowElement.getElementType() == BpmnTypeEnum.SERVICE_TASK) {
+            log.info("当前执行的requestId {} taskId {}",example.getRequestId(),example.getFlowElement().getId());
             // 通知，执行结束
             StartElementExampleData elementExampleData = StartElementExampleData.builder()
                     .flowElementId(flowElement.getId())
@@ -318,12 +344,14 @@ public class FlowExampleManager {
                     eventManager.sendMessage(EventType.ELEMENT_START, elementExampleData);
                 }).onFailure(fail -> {
                     // 获取事务事务信息失败-（直接）
-                    System.out.println("获取事务信息失败" + ExceptionMessage.getStackTrace(fail));
+                    log.error("获取事务信息失败 {}", ExceptionMessage.getStackTrace(fail));
                     example.getPromise().fail(fail);
                 });
                 return;
             }
             eventManager.sendMessage(EventType.ELEMENT_START, elementExampleData);
+            runPlan(example);
+        }else {
             runPlan(example);
         }
     }
@@ -346,7 +374,6 @@ public class FlowExampleManager {
             Future<JsonObject> transactionFuture = transaction(example, groupId, taskGroupId);
             transactionFuture.onSuccess(suss -> {
                 example.addFailTransactionGroupSuss(taskGroupId);
-
                 checkExampleTransactionIsFinish(example);
                 // 校验是否 事务完毕
             }).onFailure(fail -> {
@@ -357,6 +384,9 @@ public class FlowExampleManager {
             break;
         }
     }
+
+    // 转正相关内容
+
 
     private void checkExampleTransactionIsFinish(FlowExample example) {
         Map<String, String> transactionMap = example.getTransactionGroupMap();
@@ -412,11 +442,11 @@ public class FlowExampleManager {
                 runFlowExample(example, true);
             } catch (Exception e) {
                 // 存入es-异常信息
-                System.out.println("执行失败fail----" + ExceptionMessage.getStackTrace(e));
+                log.error("执行失败fail---- {}", ExceptionMessage.getStackTrace(e));
                 example.getPromise().fail(e);
             }
         }).onFailure(fail -> {
-            System.out.println("执行失败fail" + ExceptionMessage.getStackTrace(fail));
+            log.error("执行失败fail {}", ExceptionMessage.getStackTrace(fail));
             FlowElement flowElementAsync = example.getFlowElement();
             // // 后续改造重试-- 当重（）; 改造子流程
             example.addFailFlowElement(flowElementAsync.getId());
@@ -470,7 +500,7 @@ public class FlowExampleManager {
 
     private String buildExampleId() {
         if (Objects.isNull(this.redisEnv)) {
-            this.redisEnv = SpringUtil.getBean(RedisTemplate.class);
+            this.redisEnv = SpiderCoreVerticle.factory.getBean(RedisTemplate.class);
         }
         SnowIdDto snowIdDto = IdWorker.calculateDataIdAndWorkId2(this.redisEnv, FLOW_EXAMPLE_PREFIX);
         SnowFlake snowFlake = new SnowFlake(snowIdDto.getWorkerId(), snowIdDto.getDataCenterId(), snowIdDto.getTimestamp());

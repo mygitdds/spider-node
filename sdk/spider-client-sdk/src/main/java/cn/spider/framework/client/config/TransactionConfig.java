@@ -13,7 +13,7 @@ import javax.sql.DataSource;
  * @BelongsPackage: cn.spider.framework.linker.client.config
  * @Author: dengdongsheng
  * @CreateTime: 2023-04-09  19:40
- * @Description: TODO
+ * @Description: 事务配置
  * @Version: 1.0
  */
 public class TransactionConfig {

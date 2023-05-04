@@ -16,7 +16,7 @@ import java.util.List;
 
 public class ControllerVerticle extends AbstractVerticle {
 
-  private AbstractApplicationContext factory;
+  public static AbstractApplicationContext factory;
 
   public static Vertx clusterVertx;
 

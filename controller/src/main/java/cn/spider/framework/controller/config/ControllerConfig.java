@@ -2,8 +2,6 @@ package cn.spider.framework.controller.config;
 
 import cn.spider.framework.common.event.EventConfig;
 import cn.spider.framework.common.event.EventManager;
-import cn.spider.framework.common.role.BrokerRole;
-import cn.spider.framework.common.utils.SpringUtil;
 import cn.spider.framework.controller.ControllerVerticle;
 import cn.spider.framework.controller.election.ElectionLeader;
 import cn.spider.framework.controller.follower.FollowerManager;
@@ -33,13 +31,6 @@ public class ControllerConfig {
         return ControllerVerticle.clusterVertx;
     }
 
-    @Bean("springUtil")
-    public SpringUtil buildSpringUtil(ApplicationContext applicationContext) {
-        SpringUtil springUtil = new SpringUtil();
-        springUtil.setApplicationContext(applicationContext);
-        return springUtil;
-    }
-
     @Bean
     public FollowerManager buildFollowerManager(Vertx vertx, RedisTemplate redisTemplate,LeaderHeartService leaderHeartService) {
         return new FollowerManager(vertx, redisTemplate,leaderHeartService);
@@ -62,6 +53,7 @@ public class ControllerConfig {
         String addr = LeaderHeartService.ADDRESS;
         return LeaderHeartService.createProxy(vertx, addr);
     }
+
 
 
 

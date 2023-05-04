@@ -69,6 +69,12 @@ public abstract class AbstractUndoLogManager implements UndoLogManager {
             + ClientTableColumnsName.UNDO_LOG_BRANCH_XID + " = ? AND " + ClientTableColumnsName.UNDO_LOG_XID
             + " = ? FOR UPDATE";
 
+
+    protected static final String SELECT_UNDO_LOG_SQL_REDUCE = "SELECT id FROM " + UNDO_LOG_TABLE_NAME + " WHERE "
+            + ClientTableColumnsName.UNDO_LOG_BRANCH_XID + " = ? AND " + ClientTableColumnsName.UNDO_LOG_XID
+            + " = ? ";
+
+
     protected static final String DELETE_UNDO_LOG_SQL = "DELETE FROM " + UNDO_LOG_TABLE_NAME + " WHERE "
             + ClientTableColumnsName.UNDO_LOG_BRANCH_XID + " = ? AND " + ClientTableColumnsName.UNDO_LOG_XID + " = ?";
 
@@ -230,7 +236,7 @@ public abstract class AbstractUndoLogManager implements UndoLogManager {
      * @throws TransactionException the transaction exception
      */
     @Override
-    public void undo(DataSourceProxy dataSourceProxy, String xid, long branchId,Connection conn) throws TransactionException {
+    public void undo(DataSourceProxy dataSourceProxy, String xid, long branchId, Connection conn) throws TransactionException {
         ResultSet rs = null;
         PreparedStatement selectPST = null;
         boolean originalAutoCommit = true;
@@ -383,6 +389,17 @@ public abstract class AbstractUndoLogManager implements UndoLogManager {
             return branchUndoLog;
         }
         return null;
+    }
+
+    public Boolean checkUndoLogExist(String xid, long branchId, Connection conn) throws SQLException {
+        PreparedStatement selectPST = conn.prepareStatement(SELECT_UNDO_LOG_SQL_REDUCE);
+        selectPST.setLong(1, branchId);
+        selectPST.setString(2, xid);
+        ResultSet rs = selectPST.executeQuery();
+        if (rs.next()) {
+            return true;
+        }
+        return false;
     }
 
     /**

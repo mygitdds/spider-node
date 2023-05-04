@@ -76,7 +76,7 @@ public class LinkerServiceImpl implements LinkerService {
             LinkerServerResponse responseNew = buildLinkerServerResponse(result);
             promise.complete(new JsonObject().put("data", JsonObject.mapFrom(responseNew)));
         }).onFailure(fail -> {
-            System.out.println(fail.getMessage());
+           log.error(fail.getMessage());
             promise.fail(fail);
         });
     }
@@ -101,7 +101,7 @@ public class LinkerServiceImpl implements LinkerService {
             LinkerServerResponse responseNew = buildLinkerServerResponse(result);
             promise.complete(new JsonObject().put("data", JsonObject.mapFrom(responseNew)));
         }).onFailure(fail -> {
-            System.out.println(fail.getMessage());
+            log.error(fail.getMessage());
             promise.fail(fail);
         });
 

@@ -3,6 +3,7 @@ package cn.spider.framework.gateway.common;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.json.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @Author spider-man
@@ -10,6 +11,7 @@ import io.vertx.core.json.JsonObject;
  * @Date: 2022/02/07/ 14:40
  * @Description
  */
+@Slf4j
 public class ResponseData {
     private String msg;
 
@@ -29,7 +31,7 @@ public class ResponseData {
     }
 
     public static String suss(JsonObject data){
-        System.out.println(JSON.toJSONString(data));
+        log.info(JSON.toJSONString(data));
         return data.toString();
     }
 

@@ -10,18 +10,17 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.shareddata.LocalMap;
-import io.vertx.core.shareddata.SharedData;
 import io.vertx.serviceproxy.ServiceBinder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
 
 import java.util.ArrayList;
 import java.util.List;
-
+@Slf4j
 public class TransactionServerVerticle extends AbstractVerticle {
 
-    private AbstractApplicationContext factory;
+    public static AbstractApplicationContext factory;
 
     public static Vertx clusterVertx;
 
@@ -44,7 +43,6 @@ public class TransactionServerVerticle extends AbstractVerticle {
         TransactionInterfaceImpl transactionInterface = new TransactionInterfaceImpl(transactionManager,transcriptManager);
         // 发布 对我提供您接口
         String transactionAddr = this.brokerName+TransactionInterface.ADDRESS;
-        System.out.println("需要发布的transactionAddr  "+transactionAddr);
         MessageConsumer<JsonObject> transactionConsumer = this.binder
                 .setAddress(transactionAddr)
                 .register(TransactionInterface.class, transactionInterface);

@@ -1,6 +1,6 @@
 package cn.spider.framework.controller.impl;
 
-import cn.spider.framework.common.utils.SpringUtil;
+import cn.spider.framework.controller.ControllerVerticle;
 import cn.spider.framework.controller.follower.FollowerManager;
 import cn.spider.framework.controller.sdk.interfaces.FollowerHeartService;
 import io.vertx.core.Future;
@@ -33,7 +33,7 @@ public class FollowerHeartServiceImpl implements FollowerHeartService {
     @Override
     public Future<Void> reconnectLeader() {
         Promise<Void> promise = Promise.promise();
-        FollowerManager followerManager = SpringUtil.getBean(FollowerManager.class);
+        FollowerManager followerManager = ControllerVerticle.factory.getBean(FollowerManager.class);
         Future<Void> connectFuture = followerManager.connect();
         connectFuture.onSuccess(suss->{
             promise.complete();

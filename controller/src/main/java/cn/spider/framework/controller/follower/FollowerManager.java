@@ -6,8 +6,8 @@ import cn.spider.framework.common.event.data.NotifyLeaderCommissionData;
 import cn.spider.framework.common.role.BrokerRole;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.common.utils.ExceptionMessage;
-import cn.spider.framework.common.utils.SpringUtil;
 import cn.spider.framework.container.sdk.interfaces.LeaderService;
+import cn.spider.framework.controller.ControllerVerticle;
 import cn.spider.framework.controller.data.RegisterLeaderRequest;
 import cn.spider.framework.controller.impl.FollowerHeartServiceImpl;
 import cn.spider.framework.controller.leader.Leader;
@@ -179,7 +179,7 @@ public class FollowerManager {
                                     // 直接设置- 晋升为leader
                                     this.redisTemplate.opsForValue().set(Constant.LEADER_CONFIG_KEY, this.followerName);
                                     // 启动当前节点的leader角色
-                                    LeaderManager leaderManager = SpringUtil.getBean(LeaderManager.class);
+                                    LeaderManager leaderManager = ControllerVerticle.factory.getBean(LeaderManager.class);
                                     leaderManager.init();
                                     // 关闭follower信息
                                     this.stop();

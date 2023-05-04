@@ -19,7 +19,7 @@ package cn.spider.framework.flow.util;
 
 import cn.spider.framework.annotation.TaskComponent;
 import cn.spider.framework.common.utils.ExceptionMessage;
-import cn.spider.framework.common.utils.SpringUtil;
+import cn.spider.framework.flow.SpiderCoreVerticle;
 import cn.spider.framework.flow.bpmn.ServiceTask;
 import cn.spider.framework.flow.bus.StoryBus;
 import cn.spider.framework.flow.container.component.MethodWrapper;
@@ -31,6 +31,7 @@ import cn.spider.framework.flow.exception.KstryException;
 import cn.spider.framework.flow.exception.ResourceException;
 import cn.spider.framework.flow.kv.KvScope;
 import cn.spider.framework.flow.kv.KvThreadLocal;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -38,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.util.ReflectionUtils;
 
 import java.io.Serializable;
 import java.lang.invoke.SerializedLambda;
@@ -51,6 +51,7 @@ import java.util.function.Supplier;
 /**
  * @author lykan
  */
+@Slf4j
 public class ProxyUtil {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProxyUtil.class);
@@ -76,18 +77,18 @@ public class ProxyUtil {
         invokeMethod(storyBus, methodWrapper, serviceTask, () -> new HashMap<>());
     }
 
-    public static void invokeMethod(StoryBus storyBus, MethodWrapper methodWrapper, ServiceTask serviceTask, Supplier<Map<String,Object>> paramsSupplier) {
+    public static void invokeMethod(StoryBus storyBus, MethodWrapper methodWrapper, ServiceTask serviceTask, Supplier<Map<String, Object>> paramsSupplier) {
         try {
             KvScope newKvScope = new KvScope(methodWrapper.getKvScope());
             newKvScope.setBusinessId(storyBus.getBusinessId());
             KvThreadLocal.setKvScope(newKvScope);
-            Map<String,Object> paramMap = paramsSupplier.get();
+            Map<String, Object> paramMap = paramsSupplier.get();
             Method method = methodWrapper.getMethod();
-            SchedulerManager schedulerManager = SpringUtil.getBean(SchedulerManager.class);
+            SchedulerManager schedulerManager = SpiderCoreVerticle.factory.getBean(SchedulerManager.class);
             schedulerManager.invoke(method, paramMap, serviceTask);
             // 后续改造- 因为不需要返回数据
         } catch (Throwable e) {
-            System.out.println("invokeMethod-" + ExceptionMessage.getStackTrace(e));
+            log.error("invokeMethod- {}", ExceptionMessage.getStackTrace(e));
             if ((e instanceof KstryException) && !(e instanceof BusinessException)) {
                 throw (KstryException) e;
             }

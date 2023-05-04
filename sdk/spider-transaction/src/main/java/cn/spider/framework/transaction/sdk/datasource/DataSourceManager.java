@@ -51,6 +51,7 @@ public class DataSourceManager extends AbstractResourceManager {
 
     /**
      * 锁住查询 使用 xid+resourceId锁住
+     *
      * @param branchType
      * @param resourceId
      * @param xid
@@ -108,8 +109,12 @@ public class DataSourceManager extends AbstractResourceManager {
             // 执行回退
             Connection conn = dataSourceProxy.getPlainConnection();
             UndoLogManager undoLogManager = UndoLogManagerFactory.getUndoLogManager(dataSourceProxy.getDbType());
-            isolateManager.rollbackDataValidStatus(undoLogManager,conn, TransactionOperationStatus.ROLL_BACK,xid,branchId);
-            UndoLogManagerFactory.getUndoLogManager(dataSourceProxy.getDbType()).undo(dataSourceProxy, xid, branchId,conn);
+            // 当不存在 undoLogManager的情况下直接提示成功
+            if (!undoLogManager.checkUndoLogExist(xid, branchId, conn)) {
+                return BranchStatus.PhaseTwo_Rollbacked;
+            }
+            isolateManager.rollbackDataValidStatus(undoLogManager, conn, TransactionOperationStatus.ROLL_BACK, xid, branchId);
+            UndoLogManagerFactory.getUndoLogManager(dataSourceProxy.getDbType()).undo(dataSourceProxy, xid, branchId, conn);
         } catch (TransactionException | SQLException te) {
             return BranchStatus.PhaseTwo_RollbackFailed_Retryable;
         }

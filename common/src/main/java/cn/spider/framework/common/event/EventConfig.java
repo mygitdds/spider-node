@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
 public class EventConfig {
 
     @Bean
-    public EventManager build(Vertx vertx){
+    public EventManager buildEventManager(Vertx vertx){
         return new EventManager(vertx);
     }
 }

@@ -1,8 +1,10 @@
 package cn.spider.framework.common.event.data;
 
 import cn.spider.framework.common.event.enums.TransactionType;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @BelongsProject: spider-node
@@ -14,6 +16,8 @@ import lombok.Data;
  */
 @Builder
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class StartTransactionData extends EventData {
     /**
      * 请求链路id

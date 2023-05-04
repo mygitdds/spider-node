@@ -1,5 +1,6 @@
 package cn.spider.framework.flow.consumer.business;
 
+import cn.spider.framework.common.config.Constant;
 import cn.spider.framework.common.event.EventType;
 import cn.spider.framework.common.event.data.EndElementExampleData;
 import cn.spider.framework.common.event.enums.ElementStatus;
@@ -24,6 +25,7 @@ import javax.annotation.Resource;
  */
 @Component
 public class EndElementExampleHandler implements InitializingBean {
+
     @Resource
     private EventBus eventBus;
 
@@ -39,7 +41,7 @@ public class EndElementExampleHandler implements InitializingBean {
         MessageConsumer<String> consumer = eventBus.consumer(eventType.queryAddr());
         consumer.handler(message -> {
             MultiMap multiMap = message.headers();
-            String brokerName = multiMap.get("brokerName");
+            String brokerName = multiMap.get(Constant.BROKER_NAME);
             // 校验该本节点是否为 brokerName的功能follower
             if (!transcriptManager.checkIsTranscript(brokerName)) {
                 return;

@@ -1,14 +1,9 @@
 package cn.spider.framework.flow.load.loader;
 
 import cn.spider.framework.annotation.TaskComponent;
-import cn.spider.framework.common.utils.SpringUtil;
 import cn.spider.framework.flow.container.component.TaskComponentManager;
 import cn.spider.framework.flow.engine.scheduler.SchedulerManager;
-import cn.spider.framework.flow.engine.scheduler.data.ComponentInfo;
-import cn.spider.framework.flow.load.proxy.TaskServiceProxy;
-import cn.spider.framework.flow.load.proxy.factory.TaskServiceProxyFactory;
-import cn.spider.framework.linker.sdk.interfaces.LinkerService;
-import com.alibaba.fastjson.JSON;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ClassUtils;
 
@@ -32,6 +27,7 @@ import java.util.Set;
  * @Description: class加载管理器
  * @Version: 1.0
  */
+@Slf4j
 public class ClassLoaderManager {
 
     private TaskComponentManager taskComponentManager;
@@ -82,7 +78,7 @@ public class ClassLoaderManager {
             classLoaderMap.put(name, appointClassLoader);
             // step5: 循环加载到spider-flow
             classes.forEach(item -> {
-                System.out.println("加载成功的class"+item.getTypeName());
+                log.info("加载成功的class {}",item.getTypeName());
                 this.classMap.put(item.getTypeName(),item.getClassLoader());
                 // 在spider中卸载 对于的代理对象
                 if(!item.isInterface()){
@@ -122,7 +118,6 @@ public class ClassLoaderManager {
         fileOutputStream.write(byteArrayOutputStream.toByteArray());
         fileOutputStream.close();
         inputStream.close();
-        System.out.println("下载成功：" + System.getProperty("java.io.tmpdir") + fileName);
     }
 
     public ClassLoader queryClassLoader(String classType){

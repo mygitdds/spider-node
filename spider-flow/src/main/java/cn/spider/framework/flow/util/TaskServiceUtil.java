@@ -35,9 +35,9 @@ import cn.spider.framework.flow.monitor.ParamTracking;
 import cn.spider.framework.flow.role.Role;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -52,6 +52,7 @@ import java.util.function.Function;
  *
  * @author lykan
  */
+@Slf4j
 public class TaskServiceUtil {
 
     /**
@@ -107,7 +108,7 @@ public class TaskServiceUtil {
             // 如果拿入参的 request 参数，直接赋值
             if (iDef.getScopeDataEnum() == ScopeTypeEnum.REQUEST && iDef.isInjectSelf()) {
                 String reqJson = JSON.toJSONString(storyBus.getReq());
-                System.out.println("执行的reqjson为="+reqJson);
+                log.info("执行的reqJson为 {}",reqJson);
                 // 转换
                 trackingOptional.ifPresent(mt -> mt.trackingNodeParams(serviceTask, () ->
                         ParamTracking.build(iDef.getFieldName(), storyBus.getReq(), ScopeTypeEnum.REQUEST, ScopeTypeEnum.REQUEST.name().toLowerCase())));

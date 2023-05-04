@@ -2,17 +2,15 @@ package cn.spider.framework.transaction.server.example;
 
 import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.event.EventType;
-import cn.spider.framework.common.event.data.EndFlowExampleEventData;
 import cn.spider.framework.common.event.data.EndTransactionData;
-import cn.spider.framework.common.event.data.StartTransactionData;
 import cn.spider.framework.common.event.enums.TransactionType;
 import cn.spider.framework.common.utils.ExceptionMessage;
-import cn.spider.framework.common.utils.SpringUtil;
 import cn.spider.framework.linker.sdk.data.*;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.framework.transaction.sdk.data.TransactionOperateResponse;
 import cn.spider.framework.transaction.sdk.data.TransactionOperateStatus;
 import cn.spider.framework.transaction.sdk.data.enums.TransactionStatus;
+import cn.spider.framework.transaction.server.TransactionServerVerticle;
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -55,7 +53,7 @@ public class TransactionGroupExample {
         this.groupId = groupId;
         this.transactionExampleList = transactionExampleList;
         this.promise = promise;
-        this.eventManager = SpringUtil.getBean(EventManager.class);
+        this.eventManager = TransactionServerVerticle.factory.getBean(EventManager.class);
         // 初始化错误次数
     }
 
@@ -100,7 +98,7 @@ public class TransactionGroupExample {
                 example.recordFailNum();
                 // 进行注册3秒一次进行retry->每隔十秒一次
                 if (example.getFailNum() >= 10) {
-                    System.out.println("执行错误");
+                    log.error("执行错误");
                     commit(example, linkerService);
                     return;
                 }
@@ -115,7 +113,7 @@ public class TransactionGroupExample {
             // 进行注册3秒一次进行retry->每隔十秒一次
             if (example.getFailNum() >= 10) {
                 commit(example, linkerService);
-                System.out.println("执行错误");
+                log.error("执行错误");
                 return;
             }
             example.setTransactionStatus(TransactionStatus.ROLL_BACK_FAIL);
@@ -165,7 +163,7 @@ public class TransactionGroupExample {
             JsonObject result = suss;
             LinkerServerResponse responseNew = result.getJsonObject("data").mapTo(LinkerServerResponse.class);
             if(responseNew.getResultCode().equals(ResultCode.SUSS)){
-                System.out.println("事务返回的结果成功");
+                log.info("事务返回的结果成功");
                 example.setTransactionStatus(TransactionStatus.ROLL_BACK_SUSS);
                 endTransactionData.setTransactionStatus(cn.spider.framework.common.event.enums.TransactionStatus.SUSS);
                 eventManager.sendMessage(EventType.END_TRANSACTION,endTransactionData);
@@ -174,7 +172,7 @@ public class TransactionGroupExample {
                 example.recordFailNum();
                 // 进行注册3秒一次进行retry->每隔十秒一次
                 if (example.getFailNum() >= 10) {
-                    System.out.println("执行错误");
+                   log.error("事务执行错误");
                     rollBack(example, linkerService);
                     return;
                 }

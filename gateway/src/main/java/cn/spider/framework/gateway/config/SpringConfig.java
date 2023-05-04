@@ -1,5 +1,6 @@
 package cn.spider.framework.gateway.config;
 
+import cn.spider.framework.common.role.BrokerRole;
 import cn.spider.framework.container.sdk.interfaces.BusinessService;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.container.sdk.interfaces.FlowService;
@@ -36,7 +37,7 @@ public class SpringConfig {
      */
     @Bean
     public ContainerService buildContainerService(Vertx vertx){
-        return ContainerService.createProxy(vertx,"leader"+ContainerService.ADDRESS);
+        return ContainerService.createProxy(vertx, BrokerRole.LEADER.name()+ContainerService.ADDRESS);
     }
 
     /**
@@ -56,7 +57,7 @@ public class SpringConfig {
      */
     @Bean
     public BusinessService buildBusinessService(Vertx vertx){
-        return BusinessService.createProxy(vertx,"leader"+BusinessService.ADDRESS);
+        return BusinessService.createProxy(vertx,BrokerRole.LEADER.name()+BusinessService.ADDRESS);
     }
 
 }

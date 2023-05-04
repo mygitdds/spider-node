@@ -2,8 +2,10 @@ package cn.spider.framework.common.event.data;
 
 import cn.spider.framework.common.event.enums.ElementStatus;
 import io.vertx.core.json.JsonObject;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @BelongsProject: spider-node
@@ -13,6 +15,8 @@ import lombok.Data;
  * @Description: 流程节点执行结束
  * @Version: 1.0
  */
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 @Data
 public class EndElementExampleData extends EventData {

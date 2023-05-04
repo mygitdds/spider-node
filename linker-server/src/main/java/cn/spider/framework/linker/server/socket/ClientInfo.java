@@ -34,13 +34,24 @@ public class ClientInfo {
 
     private String remoteAddress;
 
+    private Boolean isHeart;
+
+    public Boolean getHeart() {
+        return isHeart;
+    }
+
+    public void setHeart(Boolean heart) {
+        isHeart = heart;
+    }
+
     private VertxTransferServerGrpc.TransferServerVertxStub serverVertxStub;
 
-    public ClientInfo(String ip, String domain, ClientStatus clientStatus, String workerName) {
+    public ClientInfo(String ip, String domain, ClientStatus clientStatus, String workerName,Boolean isHeart) {
         this.ip = ip;
         this.domain = domain;
         this.clientStatus = clientStatus;
         this.workerName = workerName;
+        this.isHeart = isHeart;
     }
 
     public String getRemoteAddress() {

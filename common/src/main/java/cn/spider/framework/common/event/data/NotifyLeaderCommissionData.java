@@ -1,7 +1,9 @@
 package cn.spider.framework.common.event.data;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @BelongsProject: spider-node
@@ -11,6 +13,8 @@ import lombok.Data;
  * @Description: TODO
  * @Version: 1.0
  */
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 @Data
 public class NotifyLeaderCommissionData extends EventData {

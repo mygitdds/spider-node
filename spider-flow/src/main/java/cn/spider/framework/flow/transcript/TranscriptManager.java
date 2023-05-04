@@ -6,6 +6,7 @@ import cn.spider.framework.common.event.EventType;
 import cn.spider.framework.common.event.data.LeaderReplaceData;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.common.utils.ExceptionMessage;
+import cn.spider.framework.flow.timer.SpiderTimer;
 import cn.spider.framework.transaction.sdk.data.NotifyTranscriptsChange;
 import cn.spider.framework.transaction.sdk.interfaces.TransactionInterface;
 import com.alibaba.fastjson.JSON;
@@ -15,7 +16,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-
 import java.util.Objects;
 import java.util.Set;
 
@@ -42,17 +42,24 @@ public class TranscriptManager {
 
     private TransactionInterface transactionInterface;
 
-    public TranscriptManager(RedisTemplate redisTemplate, EventManager eventManager, Vertx vertx,TransactionInterface transactionInterface) {
+    private SpiderTimer timer;
+
+    public TranscriptManager(RedisTemplate redisTemplate,
+                             EventManager eventManager,
+                             Vertx vertx,
+                             TransactionInterface transactionInterface,
+                             SpiderTimer timer) {
         this.transcripts = Sets.newHashSet();
         this.redisTemplate = redisTemplate;
         this.eventManager = eventManager;
         this.vertx = vertx;
         this.thisBrokerName = BrokerInfoUtil.queryBrokerName(this.vertx);
         this.transactionInterface = transactionInterface;
+        this.timer = timer;
     }
 
     public Boolean checkIsTranscript(String brokerName) {
-        return transcripts.contains(transcripts);
+        return transcripts.contains(brokerName);
     }
 
     public void replace(Set<String> transcripts) {
@@ -69,6 +76,10 @@ public class TranscriptManager {
      * @param brokerName
      */
     public void election(String brokerName) {
+
+        if(!checkIsTranscript(brokerName)){
+            return;
+        }
         // step1: 竞争锁
         String key = Constant.TRANSCRIPT_PREFIX + brokerName;
 
@@ -78,7 +89,6 @@ public class TranscriptManager {
         if (!result) {
             return;
         }
-
         // step2: 告知本节点已经替代了某节点
         LeaderReplaceData replaceData = LeaderReplaceData.builder()
                 .newLeaderTransaction(thisBrokerName)
@@ -86,10 +96,10 @@ public class TranscriptManager {
                 .build();
         // 发事件通知 本节点已经替代了，这个leader
         eventManager.sendMessage(EventType.LEADER_REPLACE_CHANGE, replaceData);
-
-        // step3: 把该节点中的副本转正
-
-
+        // step3: 把该节点中的副本转正-注册延迟，一秒后执行
+        this.timer.becomeTimer(brokerName);
+        // step4 1分钟后删除对应的数据
+        this.timer.deleteElectionKey(key);
     }
 
 }

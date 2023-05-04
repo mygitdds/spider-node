@@ -57,11 +57,9 @@ public class FileHandler {
                         Future<Void> fut = upload.streamToFileSystem(uploadedFileName);
                         fut.onSuccess(suss -> {
                             log.info("文件名称 {} 上传成功", upload.filename());
-                            System.out.println("文件名称"+upload.filename()+"上传成功");
                             // step1 保存名称-
                             jarRedisList.addQueue(upload.filename());
                         }).onFailure(fail -> {
-                            System.out.println("文件名称"+upload.filename()+"上传失败"+fail);
                             log.info("文件名称 {} 上传失败", upload.filename());
                         });
                         // 解析出来所有的taskComponent,taskServer// 返回前端
@@ -79,10 +77,9 @@ public class FileHandler {
                         Future<Void> fut = upload.streamToFileSystem(uploadedFileName);
                         fut.onSuccess(suss -> {
                             bpmnRedisList.addQueue(upload.filename());
-                            System.out.println("文件名称"+upload.filename()+"上传成功");
+                            log.info("文件名称 {}上传成功",upload.filename());
                         }).onFailure(fail -> {
-                            System.out.println("文件名称"+upload.filename()+"上传失败"+fail);
-                            log.info("文件名称 {} 上传失败", upload.filename());
+                            log.error("文件名称 {} 上传失败", upload.filename());
                         });
                         // 解析出来所有的taskComponent,taskServer// 返回前端
                     });

@@ -18,7 +18,7 @@ public class QueryFlowExampleResponse {
     /**
      * 总页数
      */
-    private int total;
+    private long total;
 
     public List<FlowExample> getFlowExampleList() {
         return flowExampleList;
@@ -28,11 +28,11 @@ public class QueryFlowExampleResponse {
         this.flowExampleList = flowExampleList;
     }
 
-    public int getTotal() {
+    public long getTotal() {
         return total;
     }
 
-    public void setTotal(int total) {
+    public void setTotal(long total) {
         this.total = total;
     }
 

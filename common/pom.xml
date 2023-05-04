@@ -29,7 +29,7 @@
         <dependency.junit.version>4.13.2</dependency.junit.version>
         <jakarta.el.version>3.0.3</jakarta.el.version>
         <dependency.collections.version>3.2.2</dependency.collections.version>
-        <dependency.spring.version>5.1.18.RELEASE</dependency.spring.version>
+        <dependency.spring.version>5.1.8.RELEASE</dependency.spring.version>
         <dependency.snakeyaml.version>1.33</dependency.snakeyaml.version>
     </properties>
 
@@ -178,6 +178,13 @@
             <artifactId>logback-classic</artifactId>
             <scope>provided</scope>
             <version>${dependency.logback-classic.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.25</version>
+            <scope>compile</scope>
         </dependency>
 
         <!-- util -->

@@ -5,6 +5,8 @@ import cn.spider.framework.client.transaction.TransactionManager;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 
+import javax.sql.DataSource;
+
 /**
  * @BelongsProject: spider-node
  * @BelongsPackage: cn.spider.framework.client.config
@@ -20,7 +22,7 @@ public class SpiderClintConfig {
     }
 
     @Bean("spiderTransactionManager")
-    public TransactionManager buildTransactionManager(@Value("${spider.dataSource.url}") String url,SpiderTransactionOperation operation){
+    public TransactionManager buildTransactionManager(@Value("${spider.dataSource.url}") String url, SpiderTransactionOperation operation){
         return new TransactionManager(url,operation);
     }
 }

@@ -32,7 +32,7 @@ import java.util.List;
  */
 public class SpiderCoreVerticle extends AbstractVerticle {
 
-    private AbstractApplicationContext factory;
+    public static AbstractApplicationContext factory;
 
     public static Vertx clusterVertx;
 

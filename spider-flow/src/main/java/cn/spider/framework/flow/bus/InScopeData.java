@@ -18,9 +18,9 @@
 package cn.spider.framework.flow.bus;
 
 import cn.spider.framework.annotation.enums.ScopeTypeEnum;
-import cn.spider.framework.common.utils.SpringUtil;
 import cn.spider.framework.db.map.RocksdbBusinessMap;
 import cn.spider.framework.db.util.RocksdbUtil;
+import cn.spider.framework.flow.SpiderCoreVerticle;
 
 import java.util.Map;
 
@@ -40,7 +40,7 @@ public class InScopeData extends RocksdbBusinessMap<Object, Object> implements S
      * @param requestId
      */
     public InScopeData(ScopeTypeEnum scopeTypeEnum, String requestId) {
-        super(SpringUtil.getBean(RocksdbUtil.class),requestId,SpringUtil.getBean("classLoaderMap", Map.class));
+        super(SpiderCoreVerticle.factory.getBean(RocksdbUtil.class),requestId,SpiderCoreVerticle.factory.getBean("classLoaderMap", Map.class));
         this.scopeTypeEnum = scopeTypeEnum;
     }
 

@@ -104,6 +104,9 @@ public class FlowExample {
 
     private FlowExampleRole flowExampleRole;
 
+    private String gatewayAddr;
+
+
     public FlowExampleRole getFlowExampleRole() {
         return flowExampleRole;
     }

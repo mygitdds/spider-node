@@ -1,7 +1,6 @@
 package com.flow.cloud.start;
-
-import cn.spider.framework.common.role.BrokerRole;
-import cn.spider.framework.linker.server.config.SpringConfig;
+import cn.spider.framework.common.config.Constant;
+import cn.spider.framework.common.utils.BrokerInfoUtil;
 import com.flow.cloud.start.config.StartConfig;
 import com.flow.cloud.start.util.ExceptionMessage;
 import com.flow.cloud.start.util.PropertyReader;
@@ -15,11 +14,8 @@ import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.context.support.AbstractRefreshableApplicationContext;
 import org.springframework.data.redis.core.RedisTemplate;
-
 import java.util.Map;
-
 import static com.flow.cloud.start.util.BannerHelper.banner;
 
 /**
@@ -58,45 +54,39 @@ public class SpiderStart {
                 vertxNew = vertx;
                 factory = new AnnotationConfigApplicationContext(StartConfig.class);
 
-                DeploymentOptions deployOptions = new DeploymentOptions()
-                        // verticle模式
-                        .setWorker(true)
-                        // 是否高可用
-                        .setHa(true)
-                        .setInstances(1);
-                vertx.deployVerticle("cn.spider.framework.controller.ControllerVerticle", deployOptions, res1 -> {
-                    if (res1.succeeded()) {
-                        System.out.println("start-controller-启动成功");
-                        // 循环启动 spider配置中的角色
-                        for (String role : localMap.keySet()) {
-                            switch (role) {
-                                case "gateway":
-                                    // 启动网关
-                                    String gateway = "cn.spider.framework.gateway.GatewayVerticle";
-                                    startRole(gateway, role, vertx, 1);
-                                    break;
-                                case "flow-node":
-                                    String flowNode = "cn.spider.framework.flow.SpiderCoreVerticle";
-                                    startRole(flowNode, role, vertx, 1);
-                                    break;
-                                case "scheduler":
-                                    String linkerServer = "cn.spider.framework.linker.server.LinkerMainVerticle";
-                                    startRole(linkerServer, role, vertx, 1);
-                                    break;
-                                case "transaction":
-                                    String transactionCore = "cn.spider.framework.transaction.server.TransactionServerVerticle";
-                                    startRole(transactionCore, role, vertx, 1);
-                                    break;
-                                case "log":
-                                    String logPath = "cn.spider.framework.spider.log.es.LogVerticle";
-                                    startRole(logPath, role, vertx, 1);
-                            }
-                        }
-                    } else {
-                        System.out.println("start-controller-fail"+res1.cause());
-                        log.info("start-controller-fail");
+                buildBrokerRole(vertx,factory);
+
+                for (String role : localMap.keySet()) {
+                    switch (role) {
+                        case "gateway":
+                            // 启动网关
+                            String gateway = "cn.spider.framework.gateway.GatewayVerticle";
+                            startRole(gateway, role, vertx, 1);
+                            break;
+                        case "flow-node":
+                            String flowNode = "cn.spider.framework.flow.SpiderCoreVerticle";
+                            startRole(flowNode, role, vertx, 1);
+                            break;
+                        case "scheduler":
+                            String linkerServer = "cn.spider.framework.linker.server.LinkerMainVerticle";
+                            startRole(linkerServer, role, vertx, 1);
+                            break;
+                        case "transaction":
+                            String transactionCore = "cn.spider.framework.transaction.server.TransactionServerVerticle";
+                            startRole(transactionCore, role, vertx, 1);
+                            break;
+                        case "log":
+                            String logPath = "cn.spider.framework.spider.log.es.LogVerticle";
+                            startRole(logPath, role, vertx, 1);
+                            break;
+                        case "controller":
+                            String controllerPath = "cn.spider.framework.controller.ControllerVerticle";
+                            startRole(controllerPath, role, vertx, 1);
+                            break;
                     }
-                });
+                }
+
+
             } else {
                 // failed!
                 log.info("start-fail");
@@ -140,13 +130,16 @@ public class SpiderStart {
                 .setInstances(num);
         vertx.deployVerticle(path, deployOptions, res1 -> {
             if (res1.succeeded()) {
-                System.out.println("启动成功" + role);
                 log.info("角色 {} 启动成功", role);
             } else {
-                System.out.println("启动失败" + role + ExceptionMessage.getStackTrace(res1.cause()));
                 log.info("角色 {} 启动失败,原因为 {}", role, ExceptionMessage.getStackTrace(res1.cause()));
             }
         });
     }
 
+    private static void buildBrokerRole(Vertx vertx,AbstractApplicationContext factory) {
+        String brokerName = BrokerInfoUtil.queryBrokerName(vertx);
+        RedisTemplate<String,String> redisTemplate = factory.getBean(RedisTemplate.class);
+        redisTemplate.opsForValue().setIfAbsent(Constant.LEADER_CONFIG_KEY, brokerName);
+    }
 }

@@ -41,13 +41,13 @@ public class SpiderCoreStart {
     public SpiderCoreStart(Vertx vertx, ApplicationContext applicationContext) {
         this.vertx = vertx;
         this.binder = new ServiceBinder(vertx);
-        this.brokerRole = LeaderUtil.queryBrokerRole(vertx);
+        this.brokerRole = LeaderUtil.queryBrokerRole(vertx,applicationContext);
         this.applicationContext = applicationContext;
         this.containerConsumers = Lists.newArrayList();
     }
 
     public void upgrade() {
-        this.brokerRole = LeaderUtil.queryBrokerRole(vertx);
+        this.brokerRole = LeaderUtil.queryBrokerRole(vertx,applicationContext);
         startComponentByLeader();
     }
 

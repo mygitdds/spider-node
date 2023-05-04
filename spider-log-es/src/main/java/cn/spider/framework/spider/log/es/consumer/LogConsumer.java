@@ -18,6 +18,7 @@ import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * @BelongsProject: spider-node
@@ -32,8 +33,8 @@ public class LogConsumer {
 
     private QueueManager queueManager;
 
-    public LogConsumer(Vertx vertx, QueueManager queueManager) {
-        this.eventBus = vertx.eventBus();
+    public LogConsumer(QueueManager queueManager,EventBus eventBus) {
+        this.eventBus = eventBus;
         this.queueManager = queueManager;
         consumer();
     }
@@ -113,7 +114,7 @@ public class LogConsumer {
                 .returnParam(elementExampleData.getResult().toString())
                 .exception(elementExampleData.getException())
                 .status(elementExampleData.getStatus().name())
-                .transactionStatus(elementExampleData.getTransactionStatus().name())
+                .transactionStatus(Objects.nonNull(elementExampleData.getTransactionStatus()) ? elementExampleData.getTransactionStatus().name() : null)
                 .brokerName(brokerName)
                 .build();
     }

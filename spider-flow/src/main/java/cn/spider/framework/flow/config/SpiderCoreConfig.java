@@ -3,7 +3,6 @@ package cn.spider.framework.flow.config;
 import cn.spider.framework.common.event.EventConfig;
 import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
-import cn.spider.framework.common.utils.SpringUtil;
 import cn.spider.framework.container.sdk.interfaces.BusinessService;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.db.config.DbRedisConfig;
@@ -17,11 +16,13 @@ import cn.spider.framework.flow.load.loader.HotClassLoader;
 import cn.spider.framework.flow.SpiderCoreVerticle;
 import cn.spider.framework.flow.sync.Publish;
 import cn.spider.framework.flow.sync.SyncBusinessRecord;
+import cn.spider.framework.flow.timer.SpiderTimer;
 import cn.spider.framework.flow.transcript.TranscriptManager;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.framework.transaction.sdk.interfaces.TransactionInterface;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
+import io.vertx.core.eventbus.EventBus;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
@@ -64,13 +65,6 @@ public class SpiderCoreConfig {
         TimeUnit maxExecuteTimeUnit = TimeUnit.MINUTES;
         WorkerExecutor executor = vertx.createSharedWorkerExecutor("my-worker-pool", poolSize, maxExecuteTime, maxExecuteTimeUnit);
         return executor;
-    }
-
-    @Bean("springUtil")
-    public SpringUtil buildSpringUtil(ApplicationContext applicationContext) {
-        SpringUtil springUtil = new SpringUtil();
-        springUtil.setApplicationContext(applicationContext);
-        return springUtil;
     }
 
     @Bean
@@ -143,8 +137,17 @@ public class SpiderCoreConfig {
     }
 
     @Bean
-    public TranscriptManager buildTranscriptManager(RedisTemplate redisTemplate,EventManager eventManager,Vertx vertx,TransactionInterface transactionInterface){
-        return new TranscriptManager(redisTemplate,eventManager,vertx,transactionInterface);
+    public TranscriptManager buildTranscriptManager(RedisTemplate redisTemplate,
+                                                    EventManager eventManager,
+                                                    Vertx vertx,
+                                                    TransactionInterface transactionInterface,
+                                                    SpiderTimer timer){
+        return new TranscriptManager(redisTemplate,eventManager,vertx,transactionInterface,timer);
+    }
+
+    @Bean
+    public EventBus buildEventBus(Vertx vertx){
+        return vertx.eventBus();
     }
 
 

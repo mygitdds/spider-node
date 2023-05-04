@@ -81,4 +81,7 @@ public interface UndoLogManager {
 
     BranchUndoLog selectBranchUndoLog(String xid, long branchId, Connection conn) throws SQLException;
 
+
+    Boolean checkUndoLogExist(String xid, long branchId, Connection conn) throws SQLException;
+
 }

@@ -1,22 +1,21 @@
 package cn.spider.framework.spider.log.es.service.impl;
-
+import cn.spider.framework.log.sdk.data.FlowElementExample;
 import cn.spider.framework.log.sdk.data.QueryFlowElementExample;
-import cn.spider.framework.spider.log.es.dao.SpiderFlowElementExampleLogDao;
+import cn.spider.framework.log.sdk.data.QueryFlowElementExampleResponse;
+import cn.spider.framework.spider.log.es.client.CustomEsClient;
+import cn.spider.framework.spider.log.es.client.EsIndexTypeId;
+import cn.spider.framework.spider.log.es.client.PageEsData;
+import cn.spider.framework.spider.log.es.config.Constant;
 import cn.spider.framework.spider.log.es.domain.SpiderFlowElementExampleLog;
 import cn.spider.framework.spider.log.es.service.SpiderFlowElementExampleService;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.stereotype.Service;
-
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
-
 
 /**
  * @BelongsProject: spider-node
@@ -30,8 +29,7 @@ import java.util.Objects;
 public class SpiderFlowElementExampleServiceImpl implements SpiderFlowElementExampleService {
 
     @Resource
-    private SpiderFlowElementExampleLogDao flowElementExampleLogDao;
-
+    private CustomEsClient client;
 
     /**
      * 批量更新
@@ -39,21 +37,25 @@ public class SpiderFlowElementExampleServiceImpl implements SpiderFlowElementExa
      * @param logs
      */
     @Override
-    public void upsertBatchFlowElementExampleLog(List<SpiderFlowElementExampleLog> logs) {
-        flowElementExampleLogDao.saveAll(logs);
+    public void upsertBatchFlowElementExampleLog(List<EsIndexTypeId> logs) {
+        client.upsertAll(logs);
     }
 
     @Override
-    public List<SpiderFlowElementExampleLog> queryFlowElementExampleLog(QueryFlowElementExample queryFlowElementExample) {
-        SearchQuery query = buildFlowElementExample(queryFlowElementExample);
-        Page<SpiderFlowElementExampleLog> page = flowElementExampleLogDao.search(query);
-        return page.getContent();
+    public QueryFlowElementExampleResponse queryFlowElementExampleLog(QueryFlowElementExample queryFlowElementExample) {
+        QueryFlowElementExampleResponse response = new QueryFlowElementExampleResponse();
+        PageEsData<FlowElementExample> page = client.searchPage(buildFlowElementExample(queryFlowElementExample),
+                Constant.SPIDER_FLOW_ELEMENT_EXAMPLE_LOG_INDEX,Constant.SPIDER_FLOW_ELEMENT_EXAMPLE_LOG_TYPE,FlowElementExample.class);
+        response.setElementExampleList(page.getData());
+        response.setTotal(page.getTotalRows());
+        return response;
     }
 
-    private SearchQuery buildFlowElementExample(QueryFlowElementExample queryFlowElementExample) {
-        Pageable pageable = new PageRequest(queryFlowElementExample.getPage(), queryFlowElementExample.getSize());
+    private SearchSourceBuilder buildFlowElementExample(QueryFlowElementExample queryFlowElementExample) {
 
         BoolQueryBuilder defaultQueryBuilder = QueryBuilders.boolQuery();
+
+        SearchSourceBuilder searchSourceBuilder = SearchSourceBuilder.searchSource();
 
         if (StringUtils.isNotEmpty(queryFlowElementExample.getRequestId())) {
             defaultQueryBuilder.should(QueryBuilders.termQuery("requestId", queryFlowElementExample.getRequestId()));
@@ -92,11 +94,11 @@ public class SpiderFlowElementExampleServiceImpl implements SpiderFlowElementExa
         if (Objects.nonNull(queryFlowElementExample.getLtTakeTime())) {
             defaultQueryBuilder.should(QueryBuilders.rangeQuery("takeTime").lt(queryFlowElementExample.getGtTakeTime()));
         }
+        searchSourceBuilder.query(defaultQueryBuilder);
+        searchSourceBuilder.size(queryFlowElementExample.getSize());
+        searchSourceBuilder.from(queryFlowElementExample.getPage());
+        return searchSourceBuilder;
 
-        return new NativeSearchQueryBuilder()
-                .withQuery(defaultQueryBuilder)
-                .withPageable(pageable)
-                .build();
     }
 
 

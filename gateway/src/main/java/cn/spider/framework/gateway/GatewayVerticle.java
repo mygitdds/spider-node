@@ -19,7 +19,7 @@ import org.springframework.context.support.AbstractApplicationContext;
  */
 public class GatewayVerticle extends AbstractVerticle {
 
-  private AbstractApplicationContext factory;
+  private static AbstractApplicationContext factory;
 
   public static Vertx clusterVertx;
 

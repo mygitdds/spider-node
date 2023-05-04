@@ -1,6 +1,8 @@
 package cn.spider.framework.spider.log.es.service;
 
 import cn.spider.framework.log.sdk.data.QueryFlowElementExample;
+import cn.spider.framework.log.sdk.data.QueryFlowElementExampleResponse;
+import cn.spider.framework.spider.log.es.client.EsIndexTypeId;
 import cn.spider.framework.spider.log.es.domain.SpiderFlowElementExampleLog;
 
 import java.util.List;
@@ -15,9 +17,9 @@ import java.util.List;
  */
 public interface SpiderFlowElementExampleService {
 
-    void upsertBatchFlowElementExampleLog(List<SpiderFlowElementExampleLog> logs);
+    void upsertBatchFlowElementExampleLog(List<EsIndexTypeId> logs);
 
-    List<SpiderFlowElementExampleLog> queryFlowElementExampleLog(QueryFlowElementExample queryFlowElementExample);
+    QueryFlowElementExampleResponse queryFlowElementExampleLog(QueryFlowElementExample queryFlowElementExample);
 
 
 

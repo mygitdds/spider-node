@@ -31,7 +31,7 @@
     <junit-jupiter.version>5.9.1</junit-jupiter.version>
     <dependency.fastjson.version>1.2.75</dependency.fastjson.version>
 
-    <dependency.spring.version>5.1.18.RELEASE</dependency.spring.version>
+    <dependency.spring.version>5.1.8.RELEASE</dependency.spring.version>
     <dependency.lang3.version>3.12.0</dependency.lang3.version>
   </properties>
 

@@ -20,9 +20,10 @@ package cn.spider.framework.flow.resource.config;
 import java.util.ArrayList;
 import java.util.List;
 
-import cn.spider.framework.common.utils.SpringUtil;
 import cn.spider.framework.db.list.RedisList;
+import cn.spider.framework.flow.SpiderCoreVerticle;
 import cn.spider.framework.flow.util.ExceptionUtil;
+import cn.spider.framework.flow.util.SpringUtil;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;

@@ -8,16 +8,14 @@ import cn.spider.framework.flow.load.loader.ClassLoaderManager;
 import cn.spider.framework.flow.resource.factory.StartEventFactory;
 import cn.spider.framework.flow.sync.Constant;
 import cn.spider.framework.flow.sync.Publish;
-import cn.spider.framework.flow.sync.SyncBusinessRecord;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.core.json.JsonObject;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.concurrent.Executor;
 
 /**
  * @BelongsProject: spider-node
@@ -27,6 +25,7 @@ import java.util.concurrent.Executor;
  * @Description: 功能生命周期管理实习类
  * @Version: 1.0
  */
+@Slf4j
 @Component
 public class ContainerServiceImpl implements ContainerService {
 
@@ -58,7 +57,7 @@ public class ContainerServiceImpl implements ContainerService {
                 publish.push(Constant.BUSINESS_REGISTER_FUNCTION,data.toString());
                 promises.complete();
             } catch (Exception e) {
-                System.out.println(ExceptionMessage.getStackTrace(e));
+                log.error(ExceptionMessage.getStackTrace(e));
                 promises.fail(e);
             }
         }).onSuccess(suss->{
@@ -90,7 +89,7 @@ public class ContainerServiceImpl implements ContainerService {
                 publish.push(Constant.LOADER_JAR,data.toString());
                 promise.complete();
             } catch (Exception e) {
-                System.out.println(ExceptionMessage.getStackTrace(e));
+                log.error(ExceptionMessage.getStackTrace(e));
                 promise.fail(e);
             }
         }).onSuccess(suss->{

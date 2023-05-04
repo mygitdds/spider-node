@@ -1,5 +1,7 @@
 package cn.spider.framework.spider.log.es.queue;
 
+import cn.spider.framework.common.utils.ExceptionMessage;
+import cn.spider.framework.spider.log.es.client.EsIndexTypeId;
 import cn.spider.framework.spider.log.es.domain.ElementExampleLog;
 import cn.spider.framework.spider.log.es.domain.SpiderFlowElementExampleLog;
 import cn.spider.framework.spider.log.es.domain.SpiderFlowExampleLog;
@@ -54,13 +56,16 @@ public class QueueManager {
 
     public void consumerByBatch() {
         try {
+            if(flowExampleQueue.size() == 0){
+                return;
+            }
             List<String> list = new ArrayList<>();
             Queues.drain(flowExampleQueue, list, 500, 2, TimeUnit.SECONDS);
             if (CollectionUtils.isEmpty(list)) {
                 return;
             }
-            List<SpiderFlowElementExampleLog> elementExampleLogs = Lists.newArrayList();
-            List<SpiderFlowExampleLog> flowExampleLogs = Lists.newArrayList();
+            List<EsIndexTypeId> elementExampleLogs = Lists.newArrayList();
+            List<EsIndexTypeId> flowExampleLogs = Lists.newArrayList();
             for (String value : list) {
                 JsonObject example = new JsonObject(value);
                 ElementExampleLog elementExampleLog = example.mapTo(ElementExampleLog.class);
@@ -76,7 +81,7 @@ public class QueueManager {
             spiderFlowElementExampleService.upsertBatchFlowElementExampleLog(elementExampleLogs);
             exampleLogService.upsetBatchFlowExampleLog(flowExampleLogs);
         } catch (Exception e) {
-            log.error("缓存队列批量消费异常：{}", e.getMessage());
+            log.error("缓存队列批量消费异常：{}", ExceptionMessage.getStackTrace(e));
         }
     }
 

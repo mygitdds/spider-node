@@ -1,27 +1,21 @@
 package cn.spider.framework.spider.log.es.config;
-
-import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.spider.log.es.LogVerticle;
+import cn.spider.framework.spider.log.es.client.CustomEsClient;
 import cn.spider.framework.spider.log.es.consumer.LogConsumer;
 import cn.spider.framework.spider.log.es.queue.QueueManager;
 import cn.spider.framework.spider.log.es.service.SpiderFlowElementExampleService;
 import cn.spider.framework.spider.log.es.service.SpiderFlowExampleLogService;
 import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
-import lombok.Data;
-import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.TransportAddress;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
-
-import java.net.InetSocketAddress;
 
 /**
  * @BelongsProject: spider-node
@@ -32,7 +26,6 @@ import java.net.InetSocketAddress;
  * @Version: 1.0
  */
 @ComponentScan("cn.spider.framework.spider.log.es.*")
-@EnableElasticsearchRepositories(basePackages = "cn.spider.framework.spider.log.es.dao")
 @Configuration
 public class LogConfig {
 
@@ -47,40 +40,33 @@ public class LogConfig {
     }
 
     @Bean
-    public LogConsumer buildLogConsumer(Vertx vertx,QueueManager queueManager){
-        return new LogConsumer(vertx,queueManager);
+    public LogConsumer buildLogConsumer(EventBus eventBus,QueueManager queueManager){
+        return new LogConsumer(queueManager,eventBus);
     }
 
     @Bean
-    public TransportClient buildEsClient(Vertx vertx) {
-
-        SharedData sharedData = vertx.sharedData();
-        LocalMap<String, String> localMap = sharedData.getLocalMap("config");
-
-        String esClusterName = localMap.get("es-cluster-name");
-
-        Settings setting = Settings.builder()
-                .put("cluster.name", esClusterName)
-                .put("client.transport.ignore_cluster_name", true)
-                .put("client.transport.sniff", true)
-                .build();
-
-        String esAddr = localMap.get("es-ip-addr");
-
-        String esPort = localMap.get("es-port");
-
-        String [] addrs = esAddr.split(",");
-
-        TransportClient client = new PreBuiltTransportClient(setting);
-        for(int i = 0;i<addrs.length ;i++){
-            TransportAddress transportAddress = new TransportAddress(new InetSocketAddress("192.168.101.21", Integer.parseInt(esPort)));
-            client.addTransportAddress(transportAddress);
-        }
-        return client;
+    public EventBus buildEventBus(Vertx vertx){
+        return vertx.eventBus();
     }
 
-    @Bean("elasticsearchTemplate")
-    public ElasticsearchTemplate elasticsearchRestTemplate(TransportClient client) {
-        return new ElasticsearchTemplate(client);
+    @Bean
+    public RestHighLevelClient buildEsClient(Vertx vertx) {
+        SharedData sharedData = vertx.sharedData();
+        LocalMap<String, String> localMap = sharedData.getLocalMap("config");
+        String esAddr = localMap.get("es-ip-addr");
+        // 创建Client连接对象
+        String[] ips = esAddr.split(",");
+        HttpHost[] httpHosts = new HttpHost[ips.length];
+        for (int i = 0; i < ips.length; i++) {
+            httpHosts[i] = HttpHost.create(ips[i]);
+        }
+        RestClientBuilder builder = RestClient.builder(httpHosts);
+        return new RestHighLevelClient(builder);
+
+    }
+
+    @Bean
+    public CustomEsClient buildCustomEsClient(RestHighLevelClient client){
+        return new CustomEsClient(client);
     }
 }

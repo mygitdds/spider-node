@@ -1,4 +1,4 @@
-package cn.spider.framework.common.utils;
+package cn.spider.framework.flow.util;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -11,11 +11,12 @@ import org.springframework.stereotype.Component;
  * @author: dds
  * @create: 2022-07-19 13:35
  */
-public class SpringUtil {
+@Component("springUtil")
+public class SpringUtil implements ApplicationContextAware {
 
     private static ApplicationContext applicationContext;
 
-
+    @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         if(SpringUtil.applicationContext == null) {
             SpringUtil.applicationContext = applicationContext;

@@ -1,7 +1,7 @@
 package cn.spider.framework.flow.funtion;
 
-import cn.spider.framework.common.utils.SpringUtil;
 import cn.spider.framework.container.sdk.interfaces.LeaderService;
+import cn.spider.framework.flow.SpiderCoreVerticle;
 import cn.spider.framework.flow.init.SpiderCoreStart;
 import io.vertx.core.Future;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 public class LeaderServiceImpl implements LeaderService {
     @Override
     public Future<Void> upgrade() {
-        SpiderCoreStart spiderCoreStart = SpringUtil.getBean(SpiderCoreStart.class);
+        SpiderCoreStart spiderCoreStart = SpiderCoreVerticle.factory.getBean(SpiderCoreStart.class);
         spiderCoreStart.upgrade();
         return Future.succeededFuture();
     }

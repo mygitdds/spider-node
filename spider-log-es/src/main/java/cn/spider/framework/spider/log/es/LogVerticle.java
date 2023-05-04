@@ -11,13 +11,13 @@ public class LogVerticle extends AbstractVerticle {
 
   public static Vertx clusterVertx;
 
-  private AbstractApplicationContext factory;
+  private static AbstractApplicationContext factory;
 
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
-    System.setProperty("es.set.netty.runtime.available.processors","false");
-    clusterVertx = vertx;
-    factory =  new AnnotationConfigApplicationContext(LogConfig.class);
+   // System.setProperty("es.set.netty.runtime.available.processors","false");
+    this.clusterVertx = vertx;
+    this.factory =  new AnnotationConfigApplicationContext(LogConfig.class);
     startPromise.complete();
   }
 }

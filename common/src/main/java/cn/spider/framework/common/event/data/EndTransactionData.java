@@ -2,8 +2,10 @@ package cn.spider.framework.common.event.data;
 
 import cn.spider.framework.common.event.enums.TransactionStatus;
 import cn.spider.framework.common.event.enums.TransactionType;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @BelongsProject: spider-node
@@ -13,7 +15,8 @@ import lombok.Data;
  * @Description: 事务结束节点
  * @Version: 1.0
  */
-
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Builder
 public class EndTransactionData extends EventData {

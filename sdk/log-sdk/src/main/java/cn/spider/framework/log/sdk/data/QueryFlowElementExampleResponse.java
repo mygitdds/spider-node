@@ -13,11 +13,21 @@ import java.util.List;
 public class QueryFlowElementExampleResponse {
     private List<FlowElementExample> elementExampleList;
 
+    private long total;
+
     public List<FlowElementExample> getElementExampleList() {
         return elementExampleList;
     }
 
     public void setElementExampleList(List<FlowElementExample> elementExampleList) {
         this.elementExampleList = elementExampleList;
+    }
+
+    public long getTotal() {
+        return total;
+    }
+
+    public void setTotal(long total) {
+        this.total = total;
     }
 }

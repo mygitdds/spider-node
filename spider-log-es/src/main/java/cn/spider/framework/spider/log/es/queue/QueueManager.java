@@ -1,12 +1,14 @@
 package cn.spider.framework.spider.log.es.queue;
 
 import cn.spider.framework.common.utils.ExceptionMessage;
+import cn.spider.framework.log.sdk.enums.ExampleType;
 import cn.spider.framework.spider.log.es.client.EsIndexTypeId;
 import cn.spider.framework.spider.log.es.domain.ElementExampleLog;
 import cn.spider.framework.spider.log.es.domain.SpiderFlowElementExampleLog;
 import cn.spider.framework.spider.log.es.domain.SpiderFlowExampleLog;
 import cn.spider.framework.spider.log.es.service.SpiderFlowElementExampleService;
 import cn.spider.framework.spider.log.es.service.SpiderFlowExampleLogService;
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import io.vertx.core.Vertx;
@@ -50,13 +52,20 @@ public class QueueManager {
         registerTimer();
     }
 
+    /**
+     * 加入队列
+     * @param param
+     */
     public void insertQueue(String param) {
         flowExampleQueue.offer(param);
     }
 
+    /**
+     * 批量消费
+     */
     public void consumerByBatch() {
         try {
-            if(flowExampleQueue.size() == 0){
+            if (flowExampleQueue.size() == 0) {
                 return;
             }
             List<String> list = new ArrayList<>();
@@ -68,13 +77,17 @@ public class QueueManager {
             List<EsIndexTypeId> flowExampleLogs = Lists.newArrayList();
             for (String value : list) {
                 JsonObject example = new JsonObject(value);
-                ElementExampleLog elementExampleLog = example.mapTo(ElementExampleLog.class);
+                log.info("日志数据为 {}", value);
+                ElementExampleLog elementExampleLog = ElementExampleLog.builder()
+                        .exampleType(ExampleType.valueOf(example.getString("exampleType")))
+                        .build();
                 switch (elementExampleLog.getExampleType()) {
                     case FLOW:
-                        flowExampleLogs.add((SpiderFlowExampleLog) elementExampleLog.getExampleLog());
+                        flowExampleLogs.add(JSON.parseObject(example.getJsonObject("exampleLog").toString(),SpiderFlowExampleLog.class));
                         break;
                     case ELEMENT:
-                        elementExampleLogs.add((SpiderFlowElementExampleLog) elementExampleLog.getExampleLog());
+                        SpiderFlowElementExampleLog spiderFlowElementExampleLog = JSON.parseObject(example.getJsonObject("exampleLog").toString(),SpiderFlowElementExampleLog.class);
+                        elementExampleLogs.add(spiderFlowElementExampleLog);
                         break;
                 }
             }

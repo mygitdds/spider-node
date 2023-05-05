@@ -1,8 +1,5 @@
 package cn.spider.framework.db.list;
-
-import org.springframework.data.redis.core.RedisConnectionUtils;
 import org.springframework.data.redis.core.RedisTemplate;
-
 import java.util.List;
 
 /**

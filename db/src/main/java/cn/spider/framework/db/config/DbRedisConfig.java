@@ -27,10 +27,10 @@ public class DbRedisConfig {
         LocalMap<String,String> localMap = sharedData.getLocalMap("config");
         JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
         jedisPoolConfig.setMaxIdle(Integer.parseInt(localMap.get("redis-maxIdle")));
+        jedisPoolConfig.setMinIdle(Integer.parseInt(localMap.get("redis-minIdle")));
         jedisPoolConfig.setMaxTotal(Integer.parseInt(localMap.get("redis-maxTotal")));
         jedisPoolConfig.setMaxWaitMillis(Long.parseLong(localMap.get("redis-maxWait")));
-
-        jedisPoolConfig.setMaxWaitMillis(10000);
+        jedisPoolConfig.setMinEvictableIdleTimeMillis(2000);
         jedisPoolConfig.setTestOnBorrow(true);
         jedisPoolConfig.setTestOnReturn(true);
         //Idle时进行连接扫描
@@ -39,9 +39,8 @@ public class DbRedisConfig {
         jedisPoolConfig.setTimeBetweenEvictionRunsMillis(30000);
         //表示idle object evitor每次扫描的最多的对象数
         jedisPoolConfig.setNumTestsPerEvictionRun(10);
-
         //表示一个对象至少停留在idle状态的最短时间，然后才能被idle object evitor扫描并驱逐；这一项只有在timeBetweenEvictionRunsMillis大于0时才有意义
-        jedisPoolConfig.setMinEvictableIdleTimeMillis(2000);
+        jedisPoolConfig.setMinEvictableIdleTimeMillis(200);
 
         return jedisPoolConfig;
     }

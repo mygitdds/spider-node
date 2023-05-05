@@ -1,7 +1,6 @@
 package com.flow.cloud.start.config;
-
-import cn.spider.framework.db.config.DbRedisConfig;
 import cn.spider.framework.db.config.DbRocksConfig;
+import cn.spider.framework.db.config.RedisConfig;
 import com.flow.cloud.start.SpiderStart;
 import io.vertx.core.Vertx;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +15,7 @@ import org.springframework.context.annotation.Import;
  * @Description: TODO
  * @Version: 1.0
  */
-@Import({DbRedisConfig.class, DbRocksConfig.class})
+@Import({RedisConfig.class, DbRocksConfig.class})
 @Configuration
 public class StartConfig {
     @Bean

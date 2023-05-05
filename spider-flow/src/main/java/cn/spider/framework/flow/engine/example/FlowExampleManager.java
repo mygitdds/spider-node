@@ -263,7 +263,7 @@ public class FlowExampleManager {
                 .startId(flowRegister.getStartEventId())
                 .build();
         //发送事件
-      //  eventManager.sendMessage(EventType.START_FLOW_EXAMPLE, eventData);
+        eventManager.sendMessage(EventType.START_FLOW_EXAMPLE, eventData);
         runFlowExample(example, true);
         return example;
     }

@@ -33,7 +33,7 @@ public class LogConsumer {
 
     private QueueManager queueManager;
 
-    public LogConsumer(QueueManager queueManager,EventBus eventBus) {
+    public LogConsumer(QueueManager queueManager, EventBus eventBus) {
         this.eventBus = eventBus;
         this.queueManager = queueManager;
         consumer();
@@ -50,7 +50,7 @@ public class LogConsumer {
                 MultiMap multiMap = message.headers();
                 String eventName = multiMap.get(Constant.EVENT_NAME);
                 String brokerName = multiMap.get(Constant.BROKER_NAME);
-                ElementExampleLog elementExampleLog = new ElementExampleLog();
+                ElementExampleLog elementExampleLog = ElementExampleLog.builder().build();
                 String data = message.body();
                 switch (eventName) {
                     case "start_flow_example":
@@ -141,7 +141,7 @@ public class LogConsumer {
                 .requestId(elementExampleData.getRequestId())
                 .endTime(LocalDateTime.now())
                 .requestParam(elementExampleData.getRequestParam())
-                .returnParam(elementExampleData.getReturnParam().toString())
+                .returnParam(Objects.isNull(elementExampleData.getReturnParam()) ? null : elementExampleData.getReturnParam().toString())
                 .exception(elementExampleData.getException())
                 .status(elementExampleData.getStatus().name())
                 .build();

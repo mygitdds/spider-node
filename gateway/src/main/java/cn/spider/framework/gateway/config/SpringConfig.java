@@ -5,6 +5,7 @@ import cn.spider.framework.container.sdk.interfaces.BusinessService;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.db.config.DbRedisConfig;
+import cn.spider.framework.db.config.RedisConfig;
 import cn.spider.framework.gateway.GatewayVerticle;
 import io.vertx.core.Vertx;
 import org.springframework.context.annotation.Bean;
@@ -21,7 +22,7 @@ import org.springframework.context.annotation.Import;
  * @Version: 1.0
  */
 @Configuration
-@Import({DbRedisConfig.class})
+@Import({RedisConfig.class})
 @ComponentScan(basePackages = {"cn.spider.framework.gateway.api.*"})
 public class SpringConfig {
 

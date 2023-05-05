@@ -7,6 +7,7 @@ import cn.spider.framework.container.sdk.interfaces.BusinessService;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.db.config.DbRedisConfig;
 import cn.spider.framework.db.config.DbRocksConfig;
+import cn.spider.framework.db.config.RedisConfig;
 import cn.spider.framework.flow.business.BusinessManager;
 import cn.spider.framework.flow.container.component.TaskComponentManager;
 import cn.spider.framework.flow.container.component.TaskContainer;
@@ -43,7 +44,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Configuration
 @ComponentScan(basePackages = {"cn.spider.framework.flow.*"})
-@Import({DbRedisConfig.class, DbRocksConfig.class, EventConfig.class})
+@Import({RedisConfig.class, DbRocksConfig.class, EventConfig.class})
 @Order(-1)
 public class SpiderCoreConfig {
     @Bean

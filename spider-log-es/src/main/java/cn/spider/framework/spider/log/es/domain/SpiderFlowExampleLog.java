@@ -1,9 +1,12 @@
 package cn.spider.framework.spider.log.es.domain;
-
 import cn.spider.framework.spider.log.es.client.EsIndexTypeId;
 import cn.spider.framework.spider.log.es.config.Constant;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -16,6 +19,8 @@ import java.time.LocalDateTime;
  * @Version: 1.0
  */
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Data
 public class SpiderFlowExampleLog extends SpiderLog implements Serializable, EsIndexTypeId {
 
@@ -64,11 +69,13 @@ public class SpiderFlowExampleLog extends SpiderLog implements Serializable, EsI
     /**
      * 开始时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private LocalDateTime startTime;
 
     /**
      * 结束时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private LocalDateTime endTime;
 
 

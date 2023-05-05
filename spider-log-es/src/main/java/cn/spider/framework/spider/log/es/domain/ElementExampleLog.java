@@ -2,6 +2,7 @@ package cn.spider.framework.spider.log.es.domain;
 
 import cn.spider.framework.log.sdk.enums.ExampleType;
 import io.vertx.core.json.JsonObject;
+import lombok.Builder;
 import lombok.Data;
 
 /**
@@ -12,7 +13,7 @@ import lombok.Data;
  * @Description: TODO
  * @Version: 1.0
  */
-
+@Builder
 @Data
 public class ElementExampleLog {
     /**

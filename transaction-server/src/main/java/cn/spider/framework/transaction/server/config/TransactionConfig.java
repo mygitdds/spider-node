@@ -2,8 +2,8 @@ package cn.spider.framework.transaction.server.config;
 
 import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
-import cn.spider.framework.db.config.DbRedisConfig;
 import cn.spider.framework.db.config.DbRocksConfig;
+import cn.spider.framework.db.config.RedisConfig;
 import cn.spider.framework.db.util.RocksdbUtil;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import cn.spider.framework.transaction.server.TransactionManager;
@@ -12,7 +12,6 @@ import cn.spider.framework.transaction.server.transcript.TranscriptManager;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.core.eventbus.EventBus;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -29,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  * @Description: TODO
  * @Version: 1.0
  */
-@Import({DbRedisConfig.class, DbRocksConfig.class})
+@Import({RedisConfig.class, DbRocksConfig.class})
 @ComponentScan(basePackages = {"cn.spider.framework.transaction.server.*"})
 @Configuration
 public class TransactionConfig {

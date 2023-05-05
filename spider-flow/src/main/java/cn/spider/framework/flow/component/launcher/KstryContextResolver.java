@@ -16,8 +16,6 @@
  *
  */
 package cn.spider.framework.flow.component.launcher;
-
-import cn.spider.framework.db.util.RocksdbUtil;
 import cn.spider.framework.flow.component.dynamic.KValueDynamicComponent;
 import cn.spider.framework.flow.component.dynamic.RoleDynamicComponent;
 import cn.spider.framework.flow.constant.ConfigPropertyNameConstant;

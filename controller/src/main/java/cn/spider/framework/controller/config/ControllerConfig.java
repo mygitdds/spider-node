@@ -8,6 +8,7 @@ import cn.spider.framework.controller.follower.FollowerManager;
 import cn.spider.framework.controller.leader.LeaderManager;
 import cn.spider.framework.controller.sdk.interfaces.LeaderHeartService;
 import cn.spider.framework.db.config.DbRedisConfig;
+import cn.spider.framework.db.config.RedisConfig;
 import io.vertx.core.Vertx;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -23,7 +24,7 @@ import org.springframework.data.redis.core.RedisTemplate;
  * @Description:
  * @Version: 1.0
  */
-@Import({DbRedisConfig.class, EventConfig.class})
+@Import({RedisConfig.class, EventConfig.class})
 @Configuration
 public class ControllerConfig {
     @Bean

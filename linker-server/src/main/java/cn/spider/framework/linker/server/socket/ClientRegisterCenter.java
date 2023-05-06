@@ -6,8 +6,6 @@ import com.google.common.collect.Lists;
 import io.grpc.ManagedChannel;
 import io.vertx.core.Vertx;
 import io.vertx.grpc.VertxChannelBuilder;
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

@@ -195,8 +195,6 @@ public class BasicStoryBus implements StoryBus {
         }
 
         MethodWrapper.ReturnTypeNoticeDef returnTypeNoticeDef = taskServiceDef.getMethodWrapper().getReturnTypeNoticeDef();
-        ReentrantReadWriteLock.WriteLock writeLock = readWriteLock.writeLock();
-        writeLock.lock();
         try {
             doNoticeResult(flowElement, result, returnTypeNoticeDef.getNoticeStaDefSet(), ScopeTypeEnum.STABLE);
             doNoticeResult(flowElement, result, returnTypeNoticeDef.getNoticeVarDefSet(), ScopeTypeEnum.VARIABLE);
@@ -217,8 +215,8 @@ public class BasicStoryBus implements StoryBus {
                 LOGGER.warn("[{}] returnResult has already been assigned once and is not allowed to be assigned repeatedly! taskName: {}",
                         ExceptionEnum.IMMUTABLE_SET_UPDATE.getExceptionCode(), taskServiceDef.getName());
             }
-        } finally {
-            writeLock.unlock();
+        } catch (Exception e){
+
         }
     }
 

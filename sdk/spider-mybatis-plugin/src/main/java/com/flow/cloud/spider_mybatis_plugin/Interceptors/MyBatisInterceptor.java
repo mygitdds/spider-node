@@ -26,7 +26,6 @@ import java.util.Properties;
         @Signature(type = Executor.class, method = "update", args = { MappedStatement.class, Object.class }),
         @Signature(type = Executor.class, method = "query", args={MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class})
 })
-
 public class MyBatisInterceptor implements Interceptor {
 
     @Override
@@ -67,6 +66,7 @@ public class MyBatisInterceptor implements Interceptor {
                 // 后面改造成单例模式
                 myOperationType = new MyInsertOperationType();
                 newsql = myOperationType.handle(statement, parameterMappings, paramMap, sql);
+                args[1] = paramMap;
                 break;
             case UPDATE:
                 myOperationType = new MyUpdateOperationType();
@@ -96,7 +96,7 @@ public class MyBatisInterceptor implements Interceptor {
         // 重新设置新的参数
         args[0] = newStatement;
         // 注意，这块因为上面进行了转换，对参数做了修改，需要新增部分内容
-        args[1] = paramMap;
+
         System.out.println("sql语句：" + newsql);
     }
 

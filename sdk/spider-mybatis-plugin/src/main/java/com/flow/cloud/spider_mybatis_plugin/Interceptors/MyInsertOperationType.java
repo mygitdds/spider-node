@@ -38,7 +38,7 @@ public class MyInsertOperationType extends MyDefaultOperationType{
             if(isNotIn(parameterMapping,parameterMappings)) {
                 parameterMappings.add(parameterMapping);
             }
-            parameterObject.put("commit_status", "0");
+            parameterObject.put("commit_status", "1");
             insert.setItemsList(list);
             System.out.println("修改后的sql语句是"+insert.toString());
             return insert.toString();

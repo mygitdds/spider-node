@@ -286,11 +286,12 @@ public class FlowExampleManager {
         // 说明流程结束
         if (flowElement.getElementType() == BpmnTypeEnum.END_EVENT) {
             log.info("当前执行的结束的requestId {}",example.getRequestId());
-            Object result = ResultUtil.buildObject(example.getStoryBus());
+            Object result = ResultUtil.buildObjectMessage(example.getStoryBus());
+
             EndFlowExampleEventData endFlowExampleEventData = EndFlowExampleEventData.builder()
                     .status(FlowExampleStatus.SUSS)
                     .requestId(example.getExampleId())
-                    .result(JsonObject.mapFrom(result))
+                    .result(Objects.isNull(result) ? new JsonObject() : JsonObject.mapFrom(result))
                     .build();
             // step1: 判断时间存在事务-存在就提交事务
             if (!example.getTransactionGroupMap().isEmpty()) {

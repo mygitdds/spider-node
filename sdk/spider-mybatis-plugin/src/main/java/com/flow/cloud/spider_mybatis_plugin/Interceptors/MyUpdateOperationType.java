@@ -31,7 +31,7 @@ public class MyUpdateOperationType extends MyDefaultOperationType {
             Expression where = update.getWhere();
             EqualsTo status = new EqualsTo();
             status.setLeftExpression(new Column(table, "commit_status"));
-            StringValue stringValue = new StringValue("0");
+            StringValue stringValue = new StringValue("1");
             status.setRightExpression(stringValue);
             if(where!=null) {
                 AndExpression lastwhere = new AndExpression(where, status);

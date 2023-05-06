@@ -18,4 +18,14 @@ public class ResultUtil {
         }
         return result;
     }
+
+    public static Object buildObjectMessage(BasicStoryBus storyBus){
+        Object result = new Object();
+        if (storyBus.getResult().isPresent()) {
+            result = storyBus.getResult().get();
+        }
+        return null;
+    }
+
+
 }

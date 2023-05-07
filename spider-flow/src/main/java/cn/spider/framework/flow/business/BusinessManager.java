@@ -1,4 +1,5 @@
 package cn.spider.framework.flow.business;
+
 import cn.spider.framework.common.utils.WeightAlgorithm;
 import cn.spider.framework.db.list.RedisList;
 import cn.spider.framework.db.map.RedisMap;
@@ -45,22 +46,22 @@ public class BusinessManager {
 
     public BusinessManager(RedisTemplate redisTemplate, WorkerExecutor workerExecutor) {
         this.redisTemplate = redisTemplate;
-        this.redisMap = new RedisMap(redisTemplate,BUSINESS_CONFIG,workerExecutor);
+        this.redisMap = new RedisMap(redisTemplate, BUSINESS_CONFIG, workerExecutor);
     }
 
     // 注册功能
     public String registerBusinessFunction(BusinessFunctions businessFunctions) {
 
-        if(StringUtils.isEmpty(businessFunctions.getId())){
+        if (StringUtils.isEmpty(businessFunctions.getId())) {
             // 给一个uuid
             businessFunctions.setId(UUID.randomUUID().toString());
         }
 
-        RedisList businessList = new RedisList(redisTemplate,businessFunctions.getId());
+        RedisList businessList = new RedisList(redisTemplate, businessFunctions.getId());
 
         List<BusinessFunctions> functions = businessList.queueData()
                 .stream()
-                .map(item-> JSON.parseObject(item,BusinessFunctions.class))
+                .map(item -> JSON.parseObject(item, BusinessFunctions.class))
                 .collect(Collectors.toList());
 
         // 把跟自己一样版本的进行替换
@@ -69,7 +70,7 @@ public class BusinessManager {
                 .filter(item -> !StringUtils.equals(item.getVersion(), businessFunctions.getVersion()))
                 .collect(Collectors.toList());
 
-        functionsOld.stream().forEach(item->{
+        functionsOld.stream().forEach(item -> {
             businessList.leaveQueue(JSON.toJSONString(item));
         });
 
@@ -80,22 +81,22 @@ public class BusinessManager {
     // 配置权重
     public void functionWeightConfig(FunctionWeight weight) {
         String key = FUNCTION_WEIGHT_CONFIG_PREFIX + weight.getFunctionId();
-        redisMap.put(key,weight);
+        redisMap.put(key, weight);
     }
 
     /**
      * 开关版本-- 只对后续有效-- 移除权重
      */
-    public void derailFunctionVersion(DerailFunctionVersion derailFunctionVersion){
+    public void derailFunctionVersion(DerailFunctionVersion derailFunctionVersion) {
 
-        RedisList businessList = new RedisList(redisTemplate,derailFunctionVersion.getFunctionId());
+        RedisList businessList = new RedisList(redisTemplate, derailFunctionVersion.getFunctionId());
 
         List<BusinessFunctions> functions = businessList.queueData()
                 .stream()
-                .map(item-> JSON.parseObject(item,BusinessFunctions.class))
+                .map(item -> JSON.parseObject(item, BusinessFunctions.class))
                 .collect(Collectors.toList());
-        functions.forEach(item->{
-            if(StringUtils.equals(item.getVersion(),derailFunctionVersion.getVersion())){
+        functions.forEach(item -> {
+            if (StringUtils.equals(item.getVersion(), derailFunctionVersion.getVersion())) {
                 item.setStatus(derailFunctionVersion.getFunctionStatus());
             }
         });
@@ -106,7 +107,7 @@ public class BusinessManager {
                 .filter(item -> !StringUtils.equals(item.getVersion(), derailFunctionVersion.getVersion()))
                 .collect(Collectors.toList());
 
-        functionsOld.stream().forEach(item->{
+        functionsOld.stream().forEach(item -> {
             businessList.leaveQueue(JSON.toJSONString(item));
         });
         businessList.addQueue(JSON.toJSONString(derailFunctionVersion));
@@ -114,15 +115,16 @@ public class BusinessManager {
 
     /**
      * 获取startId
+     *
      * @param functionId
      * @return
      */
     public BusinessFunctions queryStartIdByFunctionId(String functionId) {
-        RedisList businessList = new RedisList(redisTemplate,functionId);
+        RedisList businessList = new RedisList(redisTemplate, functionId);
 
         List<BusinessFunctions> functions = businessList.queueData()
                 .stream()
-                .map(item-> JSON.parseObject(item,BusinessFunctions.class))
+                .map(item -> JSON.parseObject(item, BusinessFunctions.class))
                 .collect(Collectors.toList());
 
         // 没有查询到流程实例id,固然报错

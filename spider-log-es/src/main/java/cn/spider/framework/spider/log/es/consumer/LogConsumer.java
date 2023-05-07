@@ -4,6 +4,7 @@ import cn.spider.framework.common.config.Constant;
 import cn.spider.framework.common.event.EventType;
 import cn.spider.framework.common.event.data.*;
 import cn.spider.framework.common.role.EventTypeRole;
+import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.log.sdk.enums.ExampleType;
 import cn.spider.framework.spider.log.es.domain.ElementExampleLog;
 import cn.spider.framework.spider.log.es.domain.SpiderFlowElementExampleLog;
@@ -16,6 +17,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -33,9 +35,15 @@ public class LogConsumer {
 
     private QueueManager queueManager;
 
-    public LogConsumer(QueueManager queueManager, EventBus eventBus) {
+    private Vertx vertx;
+
+    private String localBrokerName;
+
+    public LogConsumer(QueueManager queueManager, EventBus eventBus,Vertx vertx) {
         this.eventBus = eventBus;
         this.queueManager = queueManager;
+        this.vertx = vertx;
+        this.localBrokerName = BrokerInfoUtil.queryBrokerName(vertx);
         consumer();
     }
 
@@ -50,6 +58,10 @@ public class LogConsumer {
                 MultiMap multiMap = message.headers();
                 String eventName = multiMap.get(Constant.EVENT_NAME);
                 String brokerName = multiMap.get(Constant.BROKER_NAME);
+                // 只处理本节点发送的日志信息
+                if(!StringUtils.equals(brokerName,localBrokerName)){
+                    return;
+                }
                 ElementExampleLog elementExampleLog = ElementExampleLog.builder().build();
                 String data = message.body();
                 switch (eventName) {

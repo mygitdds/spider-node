@@ -73,6 +73,7 @@ public class SyncBusinessRecord {
     public void syncBusinessDerail(){
         MessageConsumer<String> consumer = eventBus.consumer(Constant.BUSINESS_CONFIGURE_DERAIL);
         consumer.handler(message -> {
+
             // 同步注册功能
             JsonObject param = new JsonObject(message.body());
             Future<Void> configureDerailFuture = businessService.configureDerail(param);
@@ -113,7 +114,7 @@ public class SyncBusinessRecord {
         consumer.handler(message -> {
             // 同步注册功能
             JsonObject param = new JsonObject(message.body());
-            Future<Void> deployBpmnFuture = containerService.registerFunction(param);
+            Future<Void> deployBpmnFuture = containerService.deployBpmn(param);
             deployBpmnFuture.onSuccess(suss -> {
                 // 同步成功
                 log.info("同步成功的消息体 {}",message.body());

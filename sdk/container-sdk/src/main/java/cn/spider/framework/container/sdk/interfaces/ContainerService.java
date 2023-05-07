@@ -21,7 +21,7 @@ public interface ContainerService {
         return new ContainerServiceVertxEBProxy(vertx, address);
     }
     // 注册任务信息
-    Future<Void> registerFunction(JsonObject data);
+    Future<Void> deployBpmn(JsonObject data);
     // 销毁
     Future<Void> destroyFunction(JsonObject data);
 

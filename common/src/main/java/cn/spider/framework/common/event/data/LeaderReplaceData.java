@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Data
-public class LeaderReplaceData extends EventData{
+public class LeaderReplaceData extends EventData {
     /**
      * 新的leader
      */

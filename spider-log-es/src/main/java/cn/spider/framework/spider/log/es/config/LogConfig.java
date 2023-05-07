@@ -40,8 +40,8 @@ public class LogConfig {
     }
 
     @Bean
-    public LogConsumer buildLogConsumer(EventBus eventBus,QueueManager queueManager){
-        return new LogConsumer(queueManager,eventBus);
+    public LogConsumer buildLogConsumer(EventBus eventBus,QueueManager queueManager,Vertx vertx){
+        return new LogConsumer(queueManager,eventBus,vertx);
     }
 
     @Bean

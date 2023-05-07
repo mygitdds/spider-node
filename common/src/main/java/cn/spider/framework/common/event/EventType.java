@@ -26,6 +26,16 @@ public enum EventType {
     // replace
     LEADER_REPLACE_CHANGE(SystemRole.CONTROLLER,"leader_replace_change","副本替换具体的leader",EventTypeRole.SYSTEM),
 
+    BUSINESS_REGISTER_FUNCTION(SystemRole.FLOW_EXAMPLE,"business_register_function","注册功能",EventTypeRole.SYSTEM),
+
+    BUSINESS_CONFIGURE_DERAIL(SystemRole.FLOW_EXAMPLE,"business_config_derail","配置开关",EventTypeRole.SYSTEM),
+
+    BUSINESS_CONFIGURE_WEIGHT(SystemRole.FLOW_EXAMPLE,"business_configure_weight","业务功能版本权重",EventTypeRole.SYSTEM),
+
+    LOADER_JAR(SystemRole.FLOW_EXAMPLE,"loader_jar","部署jar包的class",EventTypeRole.SYSTEM),
+
+    DEPLOY_BPMN(SystemRole.FLOW_EXAMPLE,"deploy_bpmn","部署bpmn",EventTypeRole.SYSTEM),
+
     ;
     private SystemRole role;
 

@@ -1,10 +1,12 @@
 package cn.spider.framework.gateway.api.function;
+
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.container.sdk.interfaces.BusinessService;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.db.list.RedisList;
 import cn.spider.framework.gateway.common.ResponseData;
+import cn.spider.framework.log.sdk.interfaces.LogInterface;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
@@ -42,16 +44,22 @@ public class SpiderServerHandler {
     @Resource
     private BusinessService businessService;
 
+    @Resource
+    private LogInterface logInterface;
+
     private RedisList jarRedisList;
 
     public void init(Router router) {
         this.router = router;
-        this.jarRedisList = new RedisList(redisTemplate,"loaderJar");
+        this.jarRedisList = new RedisList(redisTemplate, "loaderJar");
         deployBpmnFunction();
         unloadFunction();
         startFlow();
         deployClass();
         registerFunction();
+        queryElementInfo();
+        queryFlowExampleInfo();
+
     }
 
     /**
@@ -125,7 +133,7 @@ public class SpiderServerHandler {
     /**
      * 新增具体的业务功能
      */
-    private void registerFunction(){
+    private void registerFunction() {
         router.post("/register/function")
                 .handler(ctx -> {
                     HttpServerResponse response = ctx.response();
@@ -133,6 +141,38 @@ public class SpiderServerHandler {
                     JsonObject param = ctx.getBodyAsJson();
                     Future<JsonObject> registerFuture = businessService.registerFunction(param);
                     registerFuture.onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        log.error("/register/function注册失败 {}", ExceptionMessage.getStackTrace(fail));
+                        response.end(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void queryElementInfo() {
+        router.post("/query/elementInfo")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    Future<JsonObject> elementResponse = logInterface.queryExampleExample(param);
+                    elementResponse.onSuccess(suss -> {
+                        response.end(ResponseData.suss(suss));
+                    }).onFailure(fail -> {
+                        log.error("/register/function注册失败 {}", ExceptionMessage.getStackTrace(fail));
+                        response.end(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void queryFlowExampleInfo() {
+        router.post("/query/flowExampleInfo")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    Future<JsonObject> elementResponse = logInterface.queryFlowExample(param);
+                    elementResponse.onSuccess(suss -> {
                         response.end(ResponseData.suss(suss));
                     }).onFailure(fail -> {
                         log.error("/register/function注册失败 {}", ExceptionMessage.getStackTrace(fail));

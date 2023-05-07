@@ -93,7 +93,7 @@ public class LogConsumer {
 
     private SpiderFlowExampleLog buildStartFlowExample(String data, String brokerName) {
         StartFlowExampleEventData startFlowExampleEventData = JSON.parseObject(data, StartFlowExampleEventData.class);
-        String id = startFlowExampleEventData.getRequestId() + startFlowExampleEventData.getFunctionId();
+        String id = startFlowExampleEventData.getRequestId();
         return SpiderFlowExampleLog.builder()
                 .id(id)
                 .brokerName(brokerName)
@@ -107,7 +107,7 @@ public class LogConsumer {
 
     private SpiderFlowExampleLog buildEndFlowExample(String data, String brokerName) {
         EndFlowExampleEventData elementExampleData = JSON.parseObject(data, EndFlowExampleEventData.class);
-        String id = elementExampleData.getRequestId() + elementExampleData.getFunctionId();
+        String id = elementExampleData.getRequestId();
         return SpiderFlowExampleLog.builder()
                 .id(id)
                 .endTime(LocalDateTime.now())
@@ -121,7 +121,7 @@ public class LogConsumer {
 
     private SpiderFlowElementExampleLog buildStartElementExample(String data) {
         StartElementExampleData elementExampleData = JSON.parseObject(data, StartElementExampleData.class);
-        String id = elementExampleData.getRequestId() + elementExampleData.getFlowElementId();
+        String id = elementExampleData.getRequestId();
         return SpiderFlowElementExampleLog.builder()
                 .id(id)
                 .flowElementId(elementExampleData.getFlowElementId())
@@ -135,7 +135,7 @@ public class LogConsumer {
 
     private SpiderFlowElementExampleLog buildEndElementExample(String data) {
         EndElementExampleData elementExampleData = JSON.parseObject(data, EndElementExampleData.class);
-        String id = elementExampleData.getRequestId() + elementExampleData.getFlowElementId();
+        String id = elementExampleData.getRequestId();
         return SpiderFlowElementExampleLog.builder()
                 .id(id)
                 .requestId(elementExampleData.getRequestId())
@@ -150,7 +150,7 @@ public class LogConsumer {
 
     private SpiderFlowElementExampleLog buildRunTransaction(String data) {
         StartTransactionData startTransactionData = JSON.parseObject(data, StartTransactionData.class);
-        String id = startTransactionData.getRequestId() + startTransactionData.getFlowElementId();
+        String id = startTransactionData.getRequestId();
         return SpiderFlowElementExampleLog.builder()
                 .id(id)
                 .transactionOperate(startTransactionData.getTransactionOperate().name())
@@ -160,7 +160,7 @@ public class LogConsumer {
 
     private SpiderFlowElementExampleLog buildEndTransaction(String data) {
         EndTransactionData endTransactionData = JSON.parseObject(data, EndTransactionData.class);
-        String id = endTransactionData.getRequestId() + endTransactionData.getFlowElementId();
+        String id = endTransactionData.getRequestId();
         return SpiderFlowElementExampleLog.builder()
                 .id(id)
                 .transactionStatus(endTransactionData.getTransactionStatus().name())

@@ -19,20 +19,16 @@ package cn.spider.framework.flow.engine.thread;
 
 import cn.spider.framework.flow.constant.GlobalProperties;
 import cn.spider.framework.flow.container.ComponentLifecycle;
-import cn.spider.framework.flow.engine.FlowRegister;
 import cn.spider.framework.flow.engine.future.*;
-import cn.spider.framework.flow.enums.AsyncTaskState;
 import cn.spider.framework.flow.enums.ExecutorType;
 import cn.spider.framework.flow.exception.ExceptionEnum;
 import cn.spider.framework.flow.exception.KstryException;
 import cn.spider.framework.flow.util.AssertUtil;
 import cn.spider.framework.flow.util.GlobalUtil;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import io.vertx.core.Promise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Vector;
 import java.util.concurrent.*;
 
 /**

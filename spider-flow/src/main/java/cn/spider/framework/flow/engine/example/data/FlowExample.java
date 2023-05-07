@@ -1,26 +1,16 @@
 package cn.spider.framework.flow.engine.example.data;
 
-import cn.spider.framework.common.utils.ExceptionMessage;
-import cn.spider.framework.db.map.RocksDbMap;
-import cn.spider.framework.db.util.RocksdbUtil;
 import cn.spider.framework.flow.bpmn.EndEvent;
 import cn.spider.framework.flow.bpmn.FlowElement;
-import cn.spider.framework.flow.bpmn.ServiceTask;
 import cn.spider.framework.flow.bpmn.StartEvent;
-import cn.spider.framework.flow.bpmn.enums.BpmnTypeEnum;
 import cn.spider.framework.flow.bus.BasicStoryBus;
 import cn.spider.framework.flow.bus.ContextStoryBus;
-import cn.spider.framework.flow.bus.StoryBus;
-import cn.spider.framework.flow.container.component.TaskServiceDef;
 import cn.spider.framework.flow.engine.FlowRegister;
 import cn.spider.framework.flow.engine.StoryEngineModule;
 import cn.spider.framework.flow.engine.example.enums.FlowExampleRole;
 import cn.spider.framework.flow.engine.thread.EndTaskPedometer;
 import cn.spider.framework.flow.engine.thread.FragmentTask;
-import cn.spider.framework.flow.exception.ExceptionEnum;
-import cn.spider.framework.flow.exception.KstryException;
 import cn.spider.framework.flow.role.Role;
-import cn.spider.framework.flow.util.ExceptionUtil;
 import cn.spider.framework.flow.util.GlobalUtil;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;

@@ -1,6 +1,8 @@
 package com.flow.cloud.start;
 import cn.spider.framework.common.config.Constant;
 import cn.spider.framework.common.utils.BrokerInfoUtil;
+import cn.spider.framework.flow.exception.ExceptionEnum;
+import cn.spider.framework.flow.exception.KstryException;
 import com.flow.cloud.start.config.StartConfig;
 import com.flow.cloud.start.util.ExceptionMessage;
 import com.flow.cloud.start.util.PropertyReader;
@@ -12,6 +14,7 @@ import io.vertx.core.shareddata.SharedData;
 import io.vertx.core.spi.cluster.ClusterManager;
 import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -104,13 +107,25 @@ public class SpiderStart {
         SharedData sharedData = vertx.sharedData();
         LocalMap<String, String> localMap = sharedData.getLocalMap("config");
         localMap.putAll(spiderConf);
-        localMap.put("flow-node", "1");
-        localMap.put("scheduler", "1");
-        localMap.put("transaction", "1");
-        localMap.put("controller", "1");
-        localMap.put("log", "1");
-
-
+        String roleConfig = localMap.get("role");
+        if(StringUtils.isEmpty(roleConfig)){
+            throw new KstryException(ExceptionEnum.SYSTEM_ROLE_ERROR);
+        }
+        String [] roles = roleConfig.split(",");
+        for(String role : roles){
+            switch (role){
+                case "gateway":
+                    localMap.put("gateway","1");
+                    break;
+                case "broker":
+                    localMap.put("flow-node", "1");
+                    localMap.put("scheduler", "1");
+                    localMap.put("transaction", "1");
+                    localMap.put("controller", "1");
+                    localMap.put("log", "1");
+                    break;
+            }
+        }
     }
 
     /**

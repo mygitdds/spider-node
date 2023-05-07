@@ -7,8 +7,6 @@ import cn.spider.framework.common.event.data.EndElementExampleData;
 import cn.spider.framework.common.event.enums.ElementStatus;
 import cn.spider.framework.common.utils.ExceptionMessage;
 import cn.spider.framework.flow.bpmn.ServiceTask;
-import cn.spider.framework.flow.bus.StoryBus;
-import cn.spider.framework.flow.engine.scheduler.data.ComponentInfo;
 import cn.spider.framework.flow.exception.ExceptionEnum;
 import cn.spider.framework.flow.exception.KstryException;
 import cn.spider.framework.linker.sdk.data.*;
@@ -16,12 +14,9 @@ import cn.spider.framework.linker.sdk.interfaces.LinkerService;
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Method;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 

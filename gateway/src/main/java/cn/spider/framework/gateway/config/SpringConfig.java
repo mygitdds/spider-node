@@ -7,6 +7,7 @@ import cn.spider.framework.container.sdk.interfaces.FlowService;
 import cn.spider.framework.db.config.DbRedisConfig;
 import cn.spider.framework.db.config.RedisConfig;
 import cn.spider.framework.gateway.GatewayVerticle;
+import cn.spider.framework.log.sdk.interfaces.LogInterface;
 import io.vertx.core.Vertx;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -27,38 +28,51 @@ import org.springframework.context.annotation.Import;
 public class SpringConfig {
 
     @Bean
-    public Vertx buildVertx(){
+    public Vertx buildVertx() {
         return GatewayVerticle.clusterVertx;
     }
 
     /**
      * 请求到leader
+     *
      * @param vertx
      * @return
      */
     @Bean
-    public ContainerService buildContainerService(Vertx vertx){
-        return ContainerService.createProxy(vertx, BrokerRole.LEADER.name()+ContainerService.ADDRESS);
+    public ContainerService buildContainerService(Vertx vertx) {
+        return ContainerService.createProxy(vertx, BrokerRole.LEADER.name() + ContainerService.ADDRESS);
     }
 
     /**
      * 请求所有节点
+     *
      * @param vertx
      * @return
      */
     @Bean
-    public FlowService buildFlowService(Vertx vertx){
-       return FlowService.createProxy(vertx,FlowService.ADDRESS);
+    public FlowService buildFlowService(Vertx vertx) {
+        return FlowService.createProxy(vertx, FlowService.ADDRESS);
     }
 
     /**
      * 只发送到leader
+     *
      * @param vertx
      * @return
      */
     @Bean
-    public BusinessService buildBusinessService(Vertx vertx){
-        return BusinessService.createProxy(vertx,BrokerRole.LEADER.name()+BusinessService.ADDRESS);
+    public BusinessService buildBusinessService(Vertx vertx) {
+        return BusinessService.createProxy(vertx, BrokerRole.LEADER.name() + BusinessService.ADDRESS);
+    }
+
+    /**
+     * log服务接口
+     * @param vertx
+     * @return
+     */
+    @Bean
+    public LogInterface buildLogInterface(Vertx vertx) {
+        return LogInterface.createProxy(vertx,LogInterface.ADDRESS);
     }
 
 }

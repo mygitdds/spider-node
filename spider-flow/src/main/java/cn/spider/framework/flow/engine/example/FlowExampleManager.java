@@ -291,6 +291,7 @@ public class FlowExampleManager {
             EndFlowExampleEventData endFlowExampleEventData = EndFlowExampleEventData.builder()
                     .status(FlowExampleStatus.SUSS)
                     .requestId(example.getExampleId())
+                    .functionId(flowElement.getId())
                     .result(Objects.isNull(result) ? new JsonObject() : JsonObject.mapFrom(result))
                     .build();
             // step1: 判断时间存在事务-存在就提交事务
@@ -305,6 +306,7 @@ public class FlowExampleManager {
                 }).onFailure(fail -> {
                     // 记录-》写入ES
                     example.getPromise().fail(fail);
+                    endFlowExampleEventData.setStatus(FlowExampleStatus.FAIL);
                     eventManager.sendMessage(EventType.END_FLOW_EXAMPLE, endFlowExampleEventData);
                 });
                 return;
@@ -323,11 +325,13 @@ public class FlowExampleManager {
                     .flowElementId(flowElement.getId())
                     .flowElementName(flowElement.getName())
                     .functionName(example.getFunctionName())
+                    .requestId(example.getRequestId())
                     .functionId(example.getFunctionId())
                     .build();
 
             ServiceTask serviceTask = (ServiceTask) flowElement;
             String transactionGroupId = serviceTask.queryTransactionGroup();
+            serviceTask.setRequestId(example.getRequestId());
             // 当组的事务id,不为空的情况下，需要先注册事务信息
             if (!StringUtils.isEmpty(transactionGroupId)) {
                 Future<JsonObject> transaction = registerTransaction(serviceTask, example);

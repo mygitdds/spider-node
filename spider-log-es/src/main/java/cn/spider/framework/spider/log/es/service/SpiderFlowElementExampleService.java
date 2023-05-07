@@ -22,6 +22,4 @@ public interface SpiderFlowElementExampleService {
     QueryFlowElementExampleResponse queryFlowElementExampleLog(QueryFlowElementExample queryFlowElementExample);
 
 
-
-
 }

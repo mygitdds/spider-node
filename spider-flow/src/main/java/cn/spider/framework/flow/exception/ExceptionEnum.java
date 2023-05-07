@@ -32,6 +32,11 @@ public enum ExceptionEnum {
     SYSTEM_ERROR(ExceptionTypeEnum.GLOBAL, "0001", "System error!"),
 
     /**
+     * [K1010001] 未捕获异常
+     */
+    SYSTEM_ROLE_ERROR(ExceptionTypeEnum.GLOBAL, "0010", "role_no_find!"),
+
+    /**
      * [K1010002] 字符串或者对象不允许为空
      */
     NOT_ALLOW_EMPTY(ExceptionTypeEnum.GLOBAL, "0002", "The object is not allowed to be empty!"),

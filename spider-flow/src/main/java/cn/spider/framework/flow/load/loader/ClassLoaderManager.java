@@ -3,6 +3,9 @@ package cn.spider.framework.flow.load.loader;
 import cn.spider.framework.annotation.TaskComponent;
 import cn.spider.framework.flow.container.component.TaskComponentManager;
 import cn.spider.framework.flow.engine.scheduler.SchedulerManager;
+import io.vertx.core.Vertx;
+import io.vertx.core.shareddata.LocalMap;
+import io.vertx.core.shareddata.SharedData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ClassUtils;
@@ -37,17 +40,23 @@ public class ClassLoaderManager {
     /**
      * 根据类路径隐射class对象
      */
-    private Map<String,ClassLoader> classMap;
+    private Map<String, ClassLoader> classMap;
 
     private SchedulerManager schedulerManager;
 
+    private String staticFillRoute;
+
+
     private String path = ClassUtils.getDefaultClassLoader().getResource("").getPath() + "jar/";
 
-    public void init(TaskComponentManager taskComponentManager,SchedulerManager schedulerManager) {
+    public void init(TaskComponentManager taskComponentManager, SchedulerManager schedulerManager, Vertx vertx) {
         this.classLoaderMap = new HashMap<>();
         this.taskComponentManager = taskComponentManager;
         this.schedulerManager = schedulerManager;
         this.classMap = new HashMap<>();
+        SharedData sharedData = vertx.sharedData();
+        LocalMap<String, String> localMap = sharedData.getLocalMap("config");
+        this.staticFillRoute = localMap.get("static-fill-Patch");
     }
 
 
@@ -59,18 +68,12 @@ public class ClassLoaderManager {
      */
     public void loaderUrlJar(String name, String classPath) {
         try {
-            AppointClassLoader oldLoader = classLoaderMap.get(name);
-            if (Objects.nonNull(oldLoader)) {
-                // 卸载class对象
-                oldLoader.unloadJar();
-                // map进入卸载
-                classLoaderMap.remove(name);
-                // 通过-schedulerManager进行卸载
-            }
+            // 卸载
+            unloadJar(name);
             // step1: 构造url -- 从配置中获取（后续改造）
-            URL jar = new URL("jar:http://localhost:9675/" + name+"!/");
+            URL jar = new URL("jar:" + this.staticFillRoute + name + "!/");
             // step2: 创建 appointClassLoader
-            AppointClassLoader appointClassLoader = new AppointClassLoader(jar,this.getClass().getClassLoader());
+            AppointClassLoader appointClassLoader = new AppointClassLoader(jar, this.getClass().getClassLoader());
             // step3: 进行加载替换
             Set<Class> classes = appointClassLoader.loadClassNew(classPath);
             // 打印下，加载了那些文件
@@ -78,17 +81,17 @@ public class ClassLoaderManager {
             classLoaderMap.put(name, appointClassLoader);
             // step5: 循环加载到spider-flow
             classes.forEach(item -> {
-                log.info("加载成功的class {}",item.getTypeName());
-                this.classMap.put(item.getTypeName(),item.getClassLoader());
+                log.info("加载成功的class {}", item.getTypeName());
+                this.classMap.put(item.getTypeName(), item.getClassLoader());
                 // 在spider中卸载 对于的代理对象
-                if(!item.isInterface()){
+                if (!item.isInterface()) {
                     return;
                 }
                 taskComponentManager.unload(item);
                 TaskComponent taskComponent = AnnotationUtils.findAnnotation(item, TaskComponent.class);
                 // 进行注册到spider-flow中进行代理
                 taskComponentManager.appointLoaderTaskServer(item);
-                schedulerManager.addClass(taskComponent.name(),taskComponent.workerName());
+                schedulerManager.addClass(taskComponent.name(), taskComponent.workerName());
             });
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
@@ -120,8 +123,20 @@ public class ClassLoaderManager {
         inputStream.close();
     }
 
-    public ClassLoader queryClassLoader(String classType){
+    public ClassLoader queryClassLoader(String classType) {
         return this.classMap.get(classType);
+    }
+
+    public void unloadJar(String name) {
+        AppointClassLoader oldLoader = classLoaderMap.get(name);
+        if (Objects.nonNull(oldLoader)) {
+            // 卸载class对象
+            oldLoader.unloadJar();
+            // map进入卸载
+            classLoaderMap.remove(name);
+            // 通过-schedulerManager进行卸载
+        }
+
     }
 
 }

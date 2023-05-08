@@ -4,6 +4,7 @@ import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 /**
@@ -25,6 +26,8 @@ public interface BusinessService {
 
     // 注册功能
     Future<JsonObject> registerFunction(JsonObject data);
+
+    Future<JsonObject> selectFunction(JsonObject data);
     // 设置开关
     Future<Void> configureDerail(JsonObject data);
     // 配置权重

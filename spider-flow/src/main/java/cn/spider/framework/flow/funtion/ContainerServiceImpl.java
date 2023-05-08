@@ -1,16 +1,20 @@
 package cn.spider.framework.flow.funtion;
 
+import cn.spider.framework.common.data.enums.BpmnStatus;
 import cn.spider.framework.common.event.EventManager;
 import cn.spider.framework.common.event.EventType;
+import cn.spider.framework.common.event.data.DestroyBpmnData;
+import cn.spider.framework.common.event.data.DestroyClassData;
 import cn.spider.framework.common.event.data.LoaderClassData;
 import cn.spider.framework.common.event.data.DeployBpmnData;
 import cn.spider.framework.common.utils.ExceptionMessage;
+import cn.spider.framework.container.sdk.data.DestroyBpmn;
+import cn.spider.framework.container.sdk.data.DestroyClass;
 import cn.spider.framework.container.sdk.data.LoaderClassRequest;
-import cn.spider.framework.container.sdk.data.RegisterFunctionRequest;
+import cn.spider.framework.container.sdk.data.DeployBpmnRequest;
 import cn.spider.framework.container.sdk.interfaces.ContainerService;
 import cn.spider.framework.flow.load.loader.ClassLoaderManager;
 import cn.spider.framework.flow.resource.factory.StartEventFactory;
-import cn.spider.framework.flow.sync.Publish;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.WorkerExecutor;
@@ -44,9 +48,6 @@ public class ContainerServiceImpl implements ContainerService {
     @Resource
     private EventManager eventManager;
 
-    @Resource
-    private Publish publish;
-
     /**
      * 部署bpmn
      *
@@ -58,10 +59,11 @@ public class ContainerServiceImpl implements ContainerService {
         Promise<Void> promise = Promise.promise();
         businessExecute.executeBlocking(promises -> {
             try {
-                RegisterFunctionRequest request = data.mapTo(RegisterFunctionRequest.class);
+                DeployBpmnRequest request = data.mapTo(DeployBpmnRequest.class);
                 startEventFactory.dynamicsLoaderBpmn(request.getBpmnName());
-                DeployBpmnData registerFunctionData = data.mapTo(DeployBpmnData.class);
-                eventManager.sendMessage(EventType.BUSINESS_REGISTER_FUNCTION, registerFunctionData);
+                DeployBpmnData deployBpmnData = data.mapTo(DeployBpmnData.class);
+                deployBpmnData.setStatus(BpmnStatus.ENABLE);
+                eventManager.sendMessage(EventType.DEPLOY_BPMN, deployBpmnData);
                 promises.complete();
             } catch (Exception e) {
                 log.error(ExceptionMessage.getStackTrace(e));
@@ -78,8 +80,13 @@ public class ContainerServiceImpl implements ContainerService {
     }
 
     @Override
-    public Future<Void> destroyFunction(JsonObject data) {
-
+    public Future<Void> destroyBpmn(JsonObject data) {
+        DestroyBpmn request = data.mapTo(DestroyBpmn.class);
+        startEventFactory.destroyBpmn(request.getBpmnName());
+        DestroyBpmnData destroyBpmnData = DestroyBpmnData.builder()
+                .bpmnName(request.getBpmnName())
+                .build();
+        eventManager.sendMessage(EventType.DEPLOY_BPMN, destroyBpmnData);
         return Future.succeededFuture();
     }
 
@@ -90,7 +97,6 @@ public class ContainerServiceImpl implements ContainerService {
         businessExecute.executeBlocking(promise -> {
             // 下载jar文件
             try {
-                // classLoaderManager.downloadFileFromUrl("http://localhost:9675/"+request.getJarName(),request.getJarName());
                 classLoaderManager.loaderUrlJar(request.getJarName(), request.getClassPath());
                 LoaderClassData loaderClassData = data.mapTo(LoaderClassData.class);
                 eventManager.sendMessage(EventType.LOADER_JAR, loaderClassData);
@@ -106,5 +112,17 @@ public class ContainerServiceImpl implements ContainerService {
         });
         return respond.future();
     }
+
+    @Override
+    public Future<Void> destroyClass(JsonObject data) {
+        DestroyClass destroyClass = data.mapTo(DestroyClass.class);
+        classLoaderManager.unloadJar(destroyClass.getJarName());
+        DestroyClassData destroyClassData = DestroyClassData.builder()
+                .jarName(destroyClass.getJarName())
+                .build();
+        eventManager.sendMessage(EventType.DESTROY_JAR, destroyClassData);
+        return Future.succeededFuture();
+    }
+
 
 }

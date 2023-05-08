@@ -1,5 +1,6 @@
 package cn.spider.framework.common.event.data;
 
+import cn.spider.framework.common.data.enums.JarStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,10 +12,11 @@ import lombok.Data;
  * @Description: 加载 jar包功能的请求参数类
  * @Version: 1.0
  */
-@Builder
 @Data
 public class LoaderClassData extends EventData {
     private String jarName;
 
     private String classPath;
+
+    private JarStatus status;
 }

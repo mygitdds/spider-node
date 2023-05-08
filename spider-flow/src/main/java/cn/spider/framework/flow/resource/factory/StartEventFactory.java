@@ -33,21 +33,16 @@ import cn.spider.framework.flow.resource.config.BpmnConfigResource;
 import cn.spider.framework.flow.resource.config.ConfigResource;
 import cn.spider.framework.flow.util.*;
 import com.alibaba.fastjson.JSON;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-
 import javax.annotation.PostConstruct;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -125,6 +120,28 @@ public class StartEventFactory extends BasicResourceFactory<StartEvent> {
         this.resourceList.addAll(startEventList);
         this.allSubProcessMap.putAll(aspMap);
         // 刷新bms相关数据
+        StartEventContainer startEventContainer = SpringUtil.getBean(BasicStartEventContainer.class);
+        startEventContainer.refreshStartEvent(startEventList);
+    }
+
+    public void destroyBpmn(String bpmnName){
+        List<ConfigResource> configResourceList = getConfigResource(ResourceTypeEnum.APPOINT_BPMN, bpmnName);
+        if (CollectionUtils.isEmpty(configResourceList)) {
+            return;
+        }
+
+        List<BpmnConfigResource> bpmnResourceList =
+                configResourceList.stream().map(c -> GlobalUtil.transferNotEmpty(c, BpmnConfigResource.class)).collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(bpmnResourceList)) {
+            return;
+        }
+
+        Map<String, SubProcess> aspMap = getAllSubProcessMap(bpmnResourceList, null);
+        List<StartEvent> startEventList = getStartEvents(aspMap, bpmnResourceList, null);
+        Set<String> startIds = startEventList.stream().map(StartEvent::getId).collect(Collectors.toSet());
+        this.resourceList = this.resourceList.stream().filter(item -> !startIds.contains(item.getId())).collect(Collectors.toList());
+        this.allSubProcessMap.remove(aspMap.keySet());
         StartEventContainer startEventContainer = SpringUtil.getBean(BasicStartEventContainer.class);
         startEventContainer.refreshStartEvent(startEventList);
     }

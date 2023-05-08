@@ -27,12 +27,9 @@ public class RedisMap {
      */
     private String preKey;
 
-    private WorkerExecutor workerExecutor;
-
-    public RedisMap(RedisTemplate redisEnv, String preKey, WorkerExecutor workerExecutor) {
+    public RedisMap(RedisTemplate redisEnv, String preKey) {
         this.redisEnv = redisEnv;
         this.preKey = preKey;
-        this.workerExecutor = workerExecutor;
     }
 
     /**
@@ -45,6 +42,7 @@ public class RedisMap {
         return redisEnv.opsForHash().get(preKey, key);
     }
 
+
     /**
      * 插入hashmap中并且写入redis
      *
@@ -53,22 +51,7 @@ public class RedisMap {
      * @return
      */
     public Object put(Object key, Object value) {
-        // 交给线程池区做
-        workerExecutor.executeBlocking(promise -> {
-            try {
-                redisEnv.opsForHash().put(preKey, key, value);
-                promise.complete();
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        }).onSuccess(suss -> {
-            log.info("key {} ,value {} put suss", key, value);
-            // 打印相应日志
-        }).onFailure(fail -> {
-            // 打印想要日志
-            log.error("key {} ,value {} put fail {}", key, ExceptionMessage.getStackTrace(fail));
-        });
-
+        redisEnv.opsForHash().put(preKey, key, value);
         return null;
     }
 
@@ -84,25 +67,15 @@ public class RedisMap {
      */
     public void putAll(Map in) {
         // 交给线程池去做
-        workerExecutor.executeBlocking(promise -> {
-            try {
-                if (in != null && in.size() > 0) {
-                    Map<String, String> kvMap = new HashMap<>(in.size());
-                    kvMap.forEach((key, val) -> kvMap.put(key, serializeObject(val)));
-                    redisEnv.opsForHash().putAll(preKey, kvMap);
-                }
-                promise.complete();
-            } catch (Exception e) {
-                promise.fail(e);
+        try {
+            if (in != null && in.size() > 0) {
+                Map<String, String> kvMap = new HashMap<>(in.size());
+                kvMap.forEach((key, val) -> kvMap.put(key, serializeObject(val)));
+                redisEnv.opsForHash().putAll(preKey, kvMap);
             }
-
-        }).onSuccess(suss -> {
-            log.info("putAll {} suss", JSON.toJSONString(in));
-            // 打印相应日志
-        }).onFailure(fail -> {
-            // 打印想要日志
-            log.error("putAll {} fail", ExceptionMessage.getStackTrace(fail));
-        });
+        } catch (Exception e) {
+            log.error("存储-redis-fail {}", ExceptionMessage.getStackTrace(e));
+        }
     }
 
     /**
@@ -113,27 +86,16 @@ public class RedisMap {
      */
     public Object remove(Object key) {
         // 交给线程池去做
-        workerExecutor.executeBlocking(promise -> {
-            try {
-                int size = 1;
-                Object[] hasKeys = new Object[size];
-                for (int i = 0; i < size; i++) {
-                    hasKeys[i] = key;
-                }
-                redisEnv.opsForHash().delete(preKey, hasKeys);
-                promise.complete();
-            } catch (Exception e) {
-                promise.fail(e);
+        try {
+            int size = 1;
+            Object[] hasKeys = new Object[size];
+            for (int i = 0; i < size; i++) {
+                hasKeys[i] = key;
             }
-        }).onSuccess(suss -> {
-            log.info("key {} remove suss", key);
-            // 打印相应日志
-        }).onFailure(fail -> {
-            // 打印想要日志
-            log.info("key {} remove fail {}", key, ExceptionMessage.getStackTrace(fail));
-        });
-
-
+            redisEnv.opsForHash().delete(preKey, hasKeys);
+        } catch (Exception e) {
+            log.error("delete-redis-fail {}", ExceptionMessage.getStackTrace(e));
+        }
         return true;
     }
 
@@ -142,25 +104,18 @@ public class RedisMap {
      */
     public void clear() {
         // 交给线程池去做
-        workerExecutor.executeBlocking(promise -> {
-            try {
-                redisEnv.opsForHash().delete(preKey);
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        }).onSuccess(suss -> {
-            log.info("clear {} suss", preKey);
-            // 打印相应日志
-        }).onFailure(fail -> {
-            // 打印想要日志
-            log.error("clear {} fail {}", preKey, ExceptionMessage.getStackTrace(fail));
-        });
-
-
+        redisEnv.opsForHash().delete(preKey);
     }
 
     public Map<String, String> getHash() {
         return redisEnv.opsForHash().entries(preKey);
     }
+
+
+    public Map<String, Object> getHashObject() {
+        return redisEnv.opsForHash().entries(preKey);
+    }
+
+
 
 }

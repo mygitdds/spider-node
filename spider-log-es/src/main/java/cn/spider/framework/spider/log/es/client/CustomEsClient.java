@@ -123,6 +123,7 @@ public class CustomEsClient implements Closeable {
                 continue;
             }
             final String jsonString = JSONObject.toJSONString(t);
+            log.info("index {} type {}",t.index(),t.type());
             request = new IndexRequest(t.index(), t.type(), String.valueOf(t.id()))
                     .source(jsonString, XContentType.JSON).timeout(TimeValue.timeValueSeconds(timeOut));
             bulkRequest.add(request);
@@ -425,6 +426,7 @@ public class CustomEsClient implements Closeable {
             }
             sourceBuilder.timeout(TimeValue.timeValueSeconds(timeOut));
             request.source(sourceBuilder);
+
             search = restHighLevelClient.search(request, RequestOptions.DEFAULT);
         } catch (Exception e) {
             log.error("es(index:{},type:{})根据条件查询异常：", index, type, e);

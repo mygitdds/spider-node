@@ -1,14 +1,17 @@
 package cn.spider.framework.flow.business;
 
+import cn.spider.framework.container.sdk.data.SelectFunctionResponse;
 import cn.spider.framework.container.sdk.interfaces.BusinessService;
 import cn.spider.framework.flow.business.data.BusinessFunctions;
 import cn.spider.framework.flow.business.data.DerailFunctionVersion;
 import cn.spider.framework.flow.business.data.FunctionWeight;
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @BelongsProject: spider-node
@@ -35,6 +38,20 @@ public class BusinessServiceImpl implements BusinessService {
             return Future.failedFuture(e);
         }
         return Future.succeededFuture(new JsonObject().put("functionId", functionId));
+    }
+
+    @Override
+    public Future<JsonObject> selectFunction(JsonObject data) {
+        List<Object> business = null;
+        try {
+            business = businessManager.queryBusinessFunctions();
+        } catch (Exception e) {
+            Future.failedFuture(e);
+        }
+        SelectFunctionResponse response = new SelectFunctionResponse();
+        response.setFunctions(business);
+        JsonObject result = JsonObject.mapFrom(response);
+        return Future.succeededFuture(result);
     }
 
     @Override

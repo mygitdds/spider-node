@@ -6,13 +6,19 @@ import cn.spider.framework.spider.log.es.client.CustomEsClient;
 import cn.spider.framework.spider.log.es.client.EsIndexTypeId;
 import cn.spider.framework.spider.log.es.client.PageEsData;
 import cn.spider.framework.spider.log.es.config.Constant;
+import cn.spider.framework.spider.log.es.domain.SpiderFlowElementExampleLog;
+import cn.spider.framework.spider.log.es.domain.SpiderFlowExampleLog;
 import cn.spider.framework.spider.log.es.service.SpiderFlowExampleLogService;
+import com.alibaba.fastjson.JSON;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
@@ -25,12 +31,19 @@ import java.util.Objects;
  * @Description: TODO
  * @Version: 1.0
  */
+@Slf4j
 @Service
 public class SpiderFlowExampleLogServiceImpl implements SpiderFlowExampleLogService {
 
     @Resource
     private CustomEsClient client;
 
+
+    @PostConstruct
+    public void init(){
+        SpiderFlowExampleLog elementExampleLog = new SpiderFlowExampleLog();
+        client.createIndex(elementExampleLog);
+    }
 
     /**
      * 批量新增
@@ -49,7 +62,7 @@ public class SpiderFlowExampleLogServiceImpl implements SpiderFlowExampleLogServ
     public QueryFlowExampleResponse queryFlowExampleLog(QueryFlowExample queryFlowExample){
         QueryFlowExampleResponse response = new QueryFlowExampleResponse();
         PageEsData<FlowExample> page = client.searchPage(buildFlowExample(queryFlowExample),
-                Constant.SPIDER_FLOW_ELEMENT_EXAMPLE_LOG_INDEX,Constant.SPIDER_FLOW_ELEMENT_EXAMPLE_LOG_TYPE,FlowExample.class);
+                Constant.SPIDER_FLOW_EXAMPLE_LOG_INDEX,Constant.SPIDER_FLOW_EXAMPLE_LOG_TYPE,FlowExample.class);
 
         response.setTotal(page.getTotalRows());
         response.setFlowExampleList(page.getData());

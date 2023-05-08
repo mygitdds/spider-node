@@ -49,4 +49,8 @@ public class RedisList {
     public void leaveQueue(String value) {
         redisTemplate.opsForList().remove(preKey, 0, value);
     }
+
+    public void clear(){
+        redisTemplate.delete(preKey);
+    }
 }

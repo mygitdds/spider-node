@@ -4,22 +4,12 @@ package cn.spider.framework.container.sdk.data;
  * @BelongsProject: spider-node
  * @BelongsPackage: cn.spider.framework.container.sdk.data
  * @Author: dengdongsheng
- * @CreateTime: 2023-03-26  18:16
+ * @CreateTime: 2023-05-08  16:26
  * @Description: TODO
  * @Version: 1.0
  */
-public class RegisterFunctionRequest {
-    private String functionName;
-
+public class DestroyBpmn {
     private String bpmnName;
-
-    public String getFunctionName() {
-        return functionName;
-    }
-
-    public void setFunctionName(String functionName) {
-        this.functionName = functionName;
-    }
 
     public String getBpmnName() {
         return bpmnName;

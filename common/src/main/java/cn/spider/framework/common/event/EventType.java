@@ -34,7 +34,11 @@ public enum EventType {
 
     LOADER_JAR(SystemRole.FLOW_EXAMPLE,"loader_jar","部署jar包的class",EventTypeRole.SYSTEM),
 
+    DESTROY_JAR(SystemRole.FLOW_EXAMPLE,"destroy_jar","卸载",EventTypeRole.SYSTEM),
+
     DEPLOY_BPMN(SystemRole.FLOW_EXAMPLE,"deploy_bpmn","部署bpmn",EventTypeRole.SYSTEM),
+
+    DESTROY_BPMN(SystemRole.FLOW_EXAMPLE,"destroy_bpmn","卸载bpmn",EventTypeRole.SYSTEM),
 
     ;
     private SystemRole role;

@@ -1,5 +1,7 @@
 package cn.spider.framework.container.sdk.data;
 
+import cn.spider.framework.common.data.enums.JarStatus;
+
 /**
  * @BelongsProject: spider-node
  * @BelongsPackage: cn.spider.framework.container.sdk.data
@@ -13,6 +15,8 @@ public class LoaderClassRequest {
     private String jarName;
 
     private String classPath;
+
+    private JarStatus status;
 
     public String getJarName() {
         return jarName;
@@ -28,5 +32,13 @@ public class LoaderClassRequest {
 
     public void setClassPath(String classPath) {
         this.classPath = classPath;
+    }
+
+    public JarStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(JarStatus status) {
+        this.status = status;
     }
 }

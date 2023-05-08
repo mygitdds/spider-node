@@ -24,5 +24,9 @@ public class Constant {
 
     public final static String TRANSCRIPT_PREFIX = "TRANSCRIPT_PREFIX";
 
+    public final static String JAR_KEY = "JAR_KEY";
+
+
+    public final static String BPMN_KEY = "BPMN_KEY";
 
 }

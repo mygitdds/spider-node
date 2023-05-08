@@ -2,6 +2,7 @@ package cn.spider.framework.gateway.common;
 
 import cn.spider.framework.common.utils.ExceptionMessage;
 import com.alibaba.fastjson.JSON;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,9 +36,27 @@ public class ResponseData {
         return data.toString();
     }
 
-    public static String sussJson(JsonObject data){
+    public static String sussJson(JsonObject result){
+        JsonObject data = new JsonObject();
         data.put("code",0);
         data.put("msg","成功");
+        data.put("data",result.getJsonArray("functions"));
+        return data.toString();
+    }
+
+    public static String sussJsonArry(JsonArray result){
+        JsonObject data = new JsonObject();
+        data.put("code",0);
+        data.put("msg","成功");
+        data.put("data",result);
+        return data.toString();
+    }
+
+    public static String sussObject(Object object){
+        JsonObject data = new JsonObject();
+        data.put("code",0);
+        data.put("msg","成功");
+        data.put("data",object);
         return data.toString();
     }
 

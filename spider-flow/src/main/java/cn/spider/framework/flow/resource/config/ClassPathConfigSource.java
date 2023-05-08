@@ -17,13 +17,21 @@
  */
 package cn.spider.framework.flow.resource.config;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
+import cn.spider.framework.common.config.Constant;
+import cn.spider.framework.common.data.UploadBpmnParam;
+import cn.spider.framework.common.data.enums.BpmnStatus;
 import cn.spider.framework.db.list.RedisList;
+import cn.spider.framework.db.map.RedisMap;
 import cn.spider.framework.flow.SpiderCoreVerticle;
 import cn.spider.framework.flow.util.ExceptionUtil;
 import cn.spider.framework.flow.util.SpringUtil;
+import com.alibaba.fastjson.JSON;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -53,14 +61,24 @@ public abstract class ClassPathConfigSource implements ConfigSource {
         List<Resource> resourceList = new ArrayList<>();
         try {
             // 从redis中获取
-            RedisList bpmnFillNames = new RedisList(SpringUtil.getBean(RedisTemplate.class), "bpmn");
-            List<String> bpmnFillNameList = bpmnFillNames.queueData();
-            for (String bpmnFillName : bpmnFillNameList) {
-                Resource[] resources = resolver.getResources(configName + bpmnFillName);
+            RedisMap bpmnRedisMap = new RedisMap(SpringUtil.getBean(RedisTemplate.class), Constant.BPMN_KEY);
+            Map<String,String> bpmnMap = bpmnRedisMap.getHash();
+            bpmnMap.forEach((key,value)->{
+                UploadBpmnParam uploadBpmnParam = JSON.parseObject(value, UploadBpmnParam.class);
+                if(Objects.isNull(uploadBpmnParam.getStatus()) || uploadBpmnParam.getStatus().equals(BpmnStatus.STOP)){
+                    return;
+                }
+                Resource[] resources = null;
+                try {
+                    resources = resolver.getResources(configName + uploadBpmnParam.getBpmnName());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 for (Resource resource : resources) {
                     resourceList.add(resource);
                 }
-            }
+            });
+
         } catch (Throwable e) {
             throw ExceptionUtil.buildException(e, ExceptionEnum.CONFIGURATION_PARSE_FAILURE, null);
         }

@@ -69,9 +69,9 @@ public class SpiderCoreConfig {
     }
 
     @Bean
-    public ClassLoaderManager buildClassLoaderManager(TaskContainer container, SchedulerManager schedulerManager) {
+    public ClassLoaderManager buildClassLoaderManager(TaskContainer container, SchedulerManager schedulerManager,Vertx vertx) {
         ClassLoaderManager classLoaderManager = new ClassLoaderManager();
-        classLoaderManager.init((TaskComponentManager) container, schedulerManager);
+        classLoaderManager.init((TaskComponentManager) container, schedulerManager,vertx);
         return classLoaderManager;
     }
 
@@ -115,8 +115,8 @@ public class SpiderCoreConfig {
      * @return
      */
     @Bean
-    public BusinessManager buildBusinessManager(RedisTemplate redisTemplate, WorkerExecutor workerExecutor) {
-        return new BusinessManager(redisTemplate,workerExecutor);
+    public BusinessManager buildBusinessManager(RedisTemplate redisTemplate) {
+        return new BusinessManager(redisTemplate);
     }
 
     /**

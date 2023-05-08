@@ -23,10 +23,12 @@ public interface ContainerService {
     // 注册任务信息
     Future<Void> deployBpmn(JsonObject data);
     // 销毁
-    Future<Void> destroyFunction(JsonObject data);
+    Future<Void> destroyBpmn(JsonObject data);
 
     // 加载 class部署具体的接口信息
     Future<Void> loaderClass(JsonObject data);
+
+    Future<Void> destroyClass(JsonObject data);
 
 
 }

@@ -1,20 +1,18 @@
 package cn.spider.framework.common.event.data;
 
-import cn.spider.framework.common.data.enums.BpmnStatus;
 import lombok.Builder;
 import lombok.Data;
 
 /**
  * @BelongsProject: spider-node
- * @BelongsPackage: cn.spider.framework.container.sdk.data
+ * @BelongsPackage: cn.spider.framework.common.event.data
  * @Author: dengdongsheng
- * @CreateTime: 2023-03-26  18:16
+ * @CreateTime: 2023-05-08  13:12
  * @Description: TODO
  * @Version: 1.0
  */
+@Builder
 @Data
-public class DeployBpmnData extends EventData {
+public class DestroyBpmnData extends EventData {
     private String bpmnName;
-
-    private BpmnStatus status;
 }

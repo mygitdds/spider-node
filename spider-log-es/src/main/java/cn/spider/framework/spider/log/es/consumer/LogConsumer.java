@@ -140,7 +140,6 @@ public class LogConsumer {
                 .flowElementName(elementExampleData.getFlowElementName())
                 .branchId(elementExampleData.getBranchId())
                 .transactionGroupId(elementExampleData.getTransactionGroupId())
-                .requestId(elementExampleData.getRequestId())
                 .startTime(LocalDateTime.now())
                 .build();
     }
@@ -150,7 +149,6 @@ public class LogConsumer {
         String id = elementExampleData.getRequestId();
         return SpiderFlowElementExampleLog.builder()
                 .id(id)
-                .requestId(elementExampleData.getRequestId())
                 .endTime(LocalDateTime.now())
                 .requestParam(elementExampleData.getRequestParam())
                 .returnParam(Objects.isNull(elementExampleData.getReturnParam()) ? null : elementExampleData.getReturnParam().toString())

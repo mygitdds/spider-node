@@ -81,6 +81,9 @@ public class SpiderServerHandler {
         selectJar();
         selectFunction();
         deleteBpmn();
+        functionStateChange();
+        deleteFunction();
+        deleteAllFunction();
     }
 
     public void selectBpmn() {
@@ -268,6 +271,40 @@ public class SpiderServerHandler {
                 });
     }
 
+    private void deleteFunction() {
+        router.post("/delete/function")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    Future<Void> deleteFuture = businessService.deleteFunction(param);
+                    deleteFuture.onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        log.error("/delete/function删除失败{}", ExceptionMessage.getStackTrace(fail));
+                        response.end(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void functionStateChange() {
+        router.post("/state/function/change")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    JsonObject param = ctx.getBodyAsJson();
+                    Future<Void> stateChangeFuture = businessService.stateChange(param);
+                    stateChangeFuture.onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        log.error("/state/function/change更改状态失败 {}", ExceptionMessage.getStackTrace(fail));
+                        response.end(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+
+
     private void selectFunction() {
         router.post("/query/function")
                 .handler(ctx -> {
@@ -293,7 +330,7 @@ public class SpiderServerHandler {
                     elementResponse.onSuccess(suss -> {
                         response.end(ResponseData.suss(suss));
                     }).onFailure(fail -> {
-                        log.error("/register/function注册失败 {}", ExceptionMessage.getStackTrace(fail));
+                        log.error("/query/elementInfo查询失败 {}", ExceptionMessage.getStackTrace(fail));
                         response.end(ResponseData.fail(fail));
                     });
                 });
@@ -309,7 +346,22 @@ public class SpiderServerHandler {
                     elementResponse.onSuccess(suss -> {
                         response.end(ResponseData.suss(suss));
                     }).onFailure(fail -> {
-                        log.error("/register/function注册失败 {}", ExceptionMessage.getStackTrace(fail));
+                        log.error("/query/flowExampleInfo查询失败 {}", ExceptionMessage.getStackTrace(fail));
+                        response.end(ResponseData.fail(fail));
+                    });
+                });
+    }
+
+    private void deleteAllFunction() {
+        router.post("/delete/all/function")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    Future<Void> deleteFuture = businessService.deleteAll();
+                    deleteFuture.onSuccess(suss -> {
+                        response.end(ResponseData.suss());
+                    }).onFailure(fail -> {
+                        log.error("/delete/all/function {}", ExceptionMessage.getStackTrace(fail));
                         response.end(ResponseData.fail(fail));
                     });
                 });

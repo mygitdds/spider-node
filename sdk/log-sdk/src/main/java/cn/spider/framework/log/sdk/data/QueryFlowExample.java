@@ -15,7 +15,7 @@ public class QueryFlowExample {
     /**
      * requestId
      */
-    private String requestId;
+    private String id;
 
     /**
      * 业务参数
@@ -105,14 +105,6 @@ public class QueryFlowExample {
         this.endTime = endTime;
     }
 
-    public String getRequestId() {
-        return requestId;
-    }
-
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
-    }
-
     public String getBusinessParam() {
         return businessParam;
     }
@@ -135,5 +127,13 @@ public class QueryFlowExample {
 
     public void setFunctionId(String functionId) {
         this.functionId = functionId;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }

@@ -30,8 +30,6 @@ public class SpiderFlowElementExampleLog extends SpiderLog implements Serializab
      */
     private String id;
 
-    private String requestId;
-
     /**
      * 节点名称
      */

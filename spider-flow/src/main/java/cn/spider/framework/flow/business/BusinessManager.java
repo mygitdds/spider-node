@@ -5,6 +5,7 @@ import cn.spider.framework.db.map.RedisMap;
 import cn.spider.framework.flow.business.data.BusinessFunctions;
 import cn.spider.framework.flow.business.data.DerailFunctionVersion;
 import cn.spider.framework.flow.business.data.FunctionWeight;
+import cn.spider.framework.flow.business.enums.FunctionStatus;
 import com.alibaba.fastjson.JSON;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,10 +22,6 @@ import java.util.stream.Collectors;
  * @Version: 1.0
  */
 public class BusinessManager {
-
-    private final String FUNCTION_MAP_PREFIX = "FUNCTION_MAP_PREFIX";
-
-    private final String FUNCTION_WEIGHT_CONFIG_PREFIX = "FUNCTION_WEIGHT_CONFIG_PREFIX";
 
     private final String BUSINESS_FUNCTION_CONFIG = "BUSINESS_FUNCTION_CONFIG";
 
@@ -48,9 +45,23 @@ public class BusinessManager {
         return businessFunctions.getId();
     }
 
+    public void deleteAll(){
+        businessMap.clear();
+    }
+
     public List<Object> queryBusinessFunctions() {
         Map<String, Object> functionMap = businessMap.getHashObject();
         return functionMap.values().stream().collect(Collectors.toList());
+    }
+
+    public void deleteFunction(String id){
+        businessMap.remove(id);
+    }
+
+    public void updateStatus(String id, FunctionStatus status){
+        BusinessFunctions functions = (BusinessFunctions)businessMap.get(id);
+        functions.setStatus(status);
+        businessMap.put(id,functions);
     }
 
     // 配置权重

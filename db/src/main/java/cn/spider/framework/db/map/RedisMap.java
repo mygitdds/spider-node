@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 /**
@@ -104,7 +105,10 @@ public class RedisMap {
      */
     public void clear() {
         // 交给线程池去做
-        redisEnv.opsForHash().delete(preKey);
+        Set<String> removeKey =  redisEnv.opsForHash().keys(preKey);
+        removeKey.forEach(item->{
+            remove(item);
+        });
     }
 
     public Map<String, String> getHash() {

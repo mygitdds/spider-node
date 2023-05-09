@@ -75,12 +75,11 @@ public class SpiderFlowExampleLogServiceImpl implements SpiderFlowExampleLogServ
 
         BoolQueryBuilder defaultQueryBuilder = QueryBuilders.boolQuery();
         if (StringUtils.isNotEmpty(queryFlowExample.getBusinessParam())) {
-
             defaultQueryBuilder.should(QueryBuilders.queryStringQuery(queryFlowExample.getBusinessParam()).field("requestParam"));
         }
 
-        if (StringUtils.isNotEmpty(queryFlowExample.getRequestId())) {
-            defaultQueryBuilder.should(QueryBuilders.termQuery("requestId", queryFlowExample.getRequestId()));
+        if (StringUtils.isNotEmpty(queryFlowExample.getId())) {
+            defaultQueryBuilder.should(QueryBuilders.queryStringQuery(queryFlowExample.getId()).field("id"));
         }
 
         if (StringUtils.isNotEmpty(queryFlowExample.getFunctionName())) {

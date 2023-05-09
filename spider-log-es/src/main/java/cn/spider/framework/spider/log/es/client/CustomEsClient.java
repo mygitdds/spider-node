@@ -172,7 +172,7 @@ public class CustomEsClient implements Closeable {
     public void createIndex(EsIndexTypeId t) {
         CreateIndexRequest request = new CreateIndexRequest(t.index());
         try {
-            if(!existsIndex(t.index())){
+            if(existsIndex(t.index())){
                 return;
             }
             CreateIndexResponse createIndexResponse =

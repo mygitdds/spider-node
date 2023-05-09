@@ -59,7 +59,7 @@
         </Logger>
         <!--Root:日志默认打印到控制台 -->
         <!--level日志级别: ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < OFF -->
-        <Root level="INFO">
+        <Root level="ERROR">
             <AppenderRef ref="Console" />
         </Root>
     </Loggers>

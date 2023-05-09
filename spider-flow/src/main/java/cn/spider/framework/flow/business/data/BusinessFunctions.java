@@ -3,6 +3,8 @@ package cn.spider.framework.flow.business.data;
 import cn.spider.framework.flow.business.enums.FunctionStatus;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * @BelongsProject: spider-node
  * @BelongsPackage: cn.spider.framework.flow.business
@@ -42,4 +44,16 @@ public class BusinessFunctions {
      * 描述
      */
     private String desc;
+
+    /**
+     * 创建时间
+     */
+    private String createTime;
+
+    /**
+     * bpmn的文件名称
+     */
+    private String bpmnName;
+
+
 }

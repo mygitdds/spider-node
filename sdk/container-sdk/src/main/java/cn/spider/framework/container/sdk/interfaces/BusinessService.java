@@ -33,4 +33,22 @@ public interface BusinessService {
     // 配置权重
     Future<Void> configureWeight(JsonObject data);
 
+    /**
+     * 删除
+     * @param data
+     * @return
+     */
+    Future<Void> deleteFunction(JsonObject data);
+
+    /**
+     * 状态变化
+     * @param data
+     * @return
+     */
+    Future<Void> stateChange(JsonObject data);
+
+    Future<Void> deleteAll();
+
+
+
 }

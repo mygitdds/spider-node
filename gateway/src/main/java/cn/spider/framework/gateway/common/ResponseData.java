@@ -31,8 +31,11 @@ public class ResponseData {
         this.code = code;
     }
 
-    public static String suss(JsonObject data){
-        log.info(JSON.toJSONString(data));
+    public static String suss(JsonObject result){
+        JsonObject data = new JsonObject();
+        data.put("code",0);
+        data.put("msg","成功");
+        data.put("data",result);
         return data.toString();
     }
 

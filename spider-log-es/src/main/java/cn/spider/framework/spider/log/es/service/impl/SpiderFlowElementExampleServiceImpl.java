@@ -68,8 +68,8 @@ public class SpiderFlowElementExampleServiceImpl implements SpiderFlowElementExa
 
         SearchSourceBuilder searchSourceBuilder = SearchSourceBuilder.searchSource();
 
-        if (StringUtils.isNotEmpty(queryFlowElementExample.getRequestId())) {
-            defaultQueryBuilder.should(QueryBuilders.termQuery("requestId", queryFlowElementExample.getRequestId()));
+        if (StringUtils.isNotEmpty(queryFlowElementExample.getId())) {
+            defaultQueryBuilder.should(QueryBuilders.termQuery("id", queryFlowElementExample.getId()));
         }
 
         if (StringUtils.isNotEmpty(queryFlowElementExample.getRequestParam())) {

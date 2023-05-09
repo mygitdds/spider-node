@@ -10,13 +10,13 @@ package cn.spider.framework.spider.log.es.config;
  */
 public class Constant {
 
-    public final static String SPIDER_FLOW_EXAMPLE_LOG_INDEX = "SPIDER_FLOW_EXAMPLE_LOG_INDEX";
+    public final static String SPIDER_FLOW_EXAMPLE_LOG_INDEX = "flow_example_index";
 
-    public final static String SPIDER_FLOW_EXAMPLE_LOG_TYPE = "SPIDER_FLOW_EXAMPLE_LOG_TYPE";
+    public final static String SPIDER_FLOW_EXAMPLE_LOG_TYPE = "flow_example_type";
 
-    public final static String SPIDER_FLOW_ELEMENT_EXAMPLE_LOG_INDEX = "SPIDER_FLOW_ELEMENT_EXAMPLE_LOG_INDEX";
+    public final static String SPIDER_FLOW_ELEMENT_EXAMPLE_LOG_INDEX = "element_example_index";
 
-    public final static String SPIDER_FLOW_ELEMENT_EXAMPLE_LOG_TYPE = "SPIDER_FLOW_ELEMENT_EXAMPLE_LOG_TYPE";
+    public final static String SPIDER_FLOW_ELEMENT_EXAMPLE_LOG_TYPE = "element_example_type";
 
 
 

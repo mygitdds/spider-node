@@ -54,12 +54,12 @@ public class FlowExample {
     /**
      * 开始时间
      */
-    private LocalDateTime startTime;
+    private Long startTime;
 
     /**
      * 结束时间
      */
-    private LocalDateTime endTime;
+    private Long endTime;
 
 
 
@@ -127,19 +127,5 @@ public class FlowExample {
         this.functionId = functionId;
     }
 
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
 
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
-    }
 }

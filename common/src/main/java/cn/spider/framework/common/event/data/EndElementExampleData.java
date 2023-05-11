@@ -34,7 +34,7 @@ public class EndElementExampleData extends EventData {
     /**
      * 请求返回的参数
      */
-    private JsonObject returnParam;
+    private Object returnParam;
 
     /**
      * 返回参数的类型

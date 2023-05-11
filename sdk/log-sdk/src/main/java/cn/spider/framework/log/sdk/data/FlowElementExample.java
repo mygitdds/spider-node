@@ -65,12 +65,12 @@ public class FlowElementExample {
     /**
      * 开始时间
      */
-    private LocalDateTime startTime;
+    private Long startTime;
 
     /**
      * 结束时间
      */
-    private LocalDateTime endTime;
+    private Long endTime;
 
     /**
      * 耗时
@@ -165,19 +165,19 @@ public class FlowElementExample {
         this.status = status;
     }
 
-    public LocalDateTime getStartTime() {
+    public Long getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(LocalDateTime startTime) {
+    public void setStartTime(Long startTime) {
         this.startTime = startTime;
     }
 
-    public LocalDateTime getEndTime() {
+    public Long getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(LocalDateTime endTime) {
+    public void setEndTime(Long endTime) {
         this.endTime = endTime;
     }
 }

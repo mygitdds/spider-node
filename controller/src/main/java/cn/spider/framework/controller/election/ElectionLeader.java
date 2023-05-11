@@ -6,7 +6,6 @@ import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.controller.follower.FollowerManager;
 import cn.spider.framework.controller.leader.LeaderManager;
 import io.vertx.core.Vertx;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 

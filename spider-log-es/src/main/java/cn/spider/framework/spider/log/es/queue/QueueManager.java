@@ -73,8 +73,8 @@ public class QueueManager {
             if (CollectionUtils.isEmpty(list)) {
                 return;
             }
-            List<EsIndexTypeId> elementExampleLogs = Lists.newArrayList();
-            List<EsIndexTypeId> flowExampleLogs = Lists.newArrayList();
+            List<SpiderFlowElementExampleLog> elementExampleLogs = Lists.newArrayList();
+            List<SpiderFlowExampleLog> flowExampleLogs = Lists.newArrayList();
             for (String value : list) {
                 JsonObject example = new JsonObject(value);
                 log.info("日志数据为 {}", value);

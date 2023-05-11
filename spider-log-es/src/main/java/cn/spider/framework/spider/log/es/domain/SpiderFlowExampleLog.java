@@ -1,14 +1,13 @@
 package cn.spider.framework.spider.log.es.domain;
-import cn.spider.framework.spider.log.es.client.EsIndexTypeId;
-import cn.spider.framework.spider.log.es.config.Constant;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 import java.io.Serializable;
-import java.time.LocalDateTime;
 
 /**
  * @BelongsProject: spider-node
@@ -21,76 +20,71 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Document(indexName = "flow-element-log_v1", shards = 1, replicas = 1)
 @Data
-public class SpiderFlowExampleLog extends SpiderLog implements Serializable, EsIndexTypeId {
+public class SpiderFlowExampleLog extends SpiderLog implements Serializable {
 
     /**
      * 请求的requestId-当作id存储
      */
+    @Id
     private String id;
 
     /**
      * 请求参数
      */
+    @Field(name = "requestParam",type = FieldType.Keyword)
     private String requestParam;
 
+    @Field(name = "returnParam",type = FieldType.Keyword)
     private String returnParam;
 
     /**
      * 对应的-执行的broker
      */
+    @Field(name = "brokerName",type = FieldType.Keyword)
     private String brokerName;
 
     /**
      * 执行状态
      */
+    @Field(name = "status",type = FieldType.Keyword)
     private String status;
 
     /**
      * 异常信息
      */
+    @Field(name = "exception",type = FieldType.Keyword)
     private String exception;
 
     /**
      * 事务状态
      */
+    @Field(name = "transactionStatus",type = FieldType.Keyword)
     private String transactionStatus;
 
     /**
      * 功能名称
      */
+    @Field(name = "functionName",type = FieldType.Keyword)
     private String functionName;
 
     /**
      * 功能id
      */
+    @Field(name = "functionId",type = FieldType.Keyword)
     private String functionId;
 
     /**
      * 开始时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
-    private LocalDateTime startTime;
+    @Field(name = "startTime",type = FieldType.Long)
+    private Long startTime;
 
     /**
      * 结束时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
-    private LocalDateTime endTime;
+    @Field(name = "endTime",type = FieldType.Long)
+    private Long endTime;
 
-
-    @Override
-    public String index() {
-        return Constant.SPIDER_FLOW_EXAMPLE_LOG_INDEX;
-    }
-
-    @Override
-    public String type() {
-        return Constant.SPIDER_FLOW_EXAMPLE_LOG_TYPE;
-    }
-
-    @Override
-    public Object id() {
-        return id;
-    }
 }

@@ -87,7 +87,6 @@ public class FlowExampleManager {
         this.storyEngineModule = storyEngineModule;
         this.leaderFlowExampleMap = Maps.newHashMap();
         this.followerFlowExampleMap = Maps.newHashMap();
-
     }
 
     public void init() {
@@ -198,8 +197,14 @@ public class FlowExampleManager {
         example.getFlowRegister().predictNextElementNew(example.getCsd(), example.getFlowElement());
         ClassLoader resultClassLoader = this.classLoaderManager.queryClassLoader(data.getReturnClassType());
         try {
+            if(Objects.isNull(data.getReturnParam())){
+                return;
+            }
             Class resultClass = resultClassLoader.loadClass(data.getReturnClassType());
-            Object result = data.getReturnParam().mapTo(resultClass);
+            if(resultClass.equals(Void.class)){
+                return;
+            }
+            Object result = JSON.parseObject(JSON.toJSONString(data.getReturnParam()),resultClass);
             noticeResult(example, example.getFlowElement(), result);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);

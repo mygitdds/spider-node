@@ -19,9 +19,11 @@ import java.util.List;
 
 public interface SpiderFlowExampleLogService {
 
-    void upsetBatchFlowExampleLog(List<EsIndexTypeId> logs);
+    void upsetBatchFlowExampleLog(List<SpiderFlowExampleLog> logs);
 
 
     QueryFlowExampleResponse queryFlowExampleLog(QueryFlowExample queryFlowExample);
+
+    void deleteIndex();
 
 }

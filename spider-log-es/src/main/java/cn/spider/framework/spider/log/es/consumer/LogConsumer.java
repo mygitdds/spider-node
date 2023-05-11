@@ -17,9 +17,11 @@ import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Objects;
 
 /**
@@ -30,6 +32,7 @@ import java.util.Objects;
  * @Description: TODO
  * @Version: 1.0
  */
+@Slf4j
 public class LogConsumer {
     private EventBus eventBus;
 
@@ -39,7 +42,7 @@ public class LogConsumer {
 
     private String localBrokerName;
 
-    public LogConsumer(QueueManager queueManager, EventBus eventBus,Vertx vertx) {
+    public LogConsumer(QueueManager queueManager, EventBus eventBus, Vertx vertx) {
         this.eventBus = eventBus;
         this.queueManager = queueManager;
         this.vertx = vertx;
@@ -59,7 +62,7 @@ public class LogConsumer {
                 String eventName = multiMap.get(Constant.EVENT_NAME);
                 String brokerName = multiMap.get(Constant.BROKER_NAME);
                 // 只处理本节点发送的日志信息
-                if(!StringUtils.equals(brokerName,localBrokerName)){
+                if (!StringUtils.equals(brokerName, localBrokerName)) {
                     return;
                 }
                 ElementExampleLog elementExampleLog = ElementExampleLog.builder().build();
@@ -112,7 +115,7 @@ public class LogConsumer {
                 .functionId(startFlowExampleEventData.getFunctionId())
                 .functionName(startFlowExampleEventData.getFunctionName())
                 .requestParam(startFlowExampleEventData.getRequestParam().toString())
-                .startTime(LocalDateTime.now())
+                .startTime(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
                 .build();
 
     }
@@ -122,7 +125,7 @@ public class LogConsumer {
         String id = elementExampleData.getRequestId();
         return SpiderFlowExampleLog.builder()
                 .id(id)
-                .endTime(LocalDateTime.now())
+                .endTime(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
                 .returnParam(elementExampleData.getResult().toString())
                 .exception(elementExampleData.getException())
                 .status(elementExampleData.getStatus().name())
@@ -133,25 +136,30 @@ public class LogConsumer {
 
     private SpiderFlowElementExampleLog buildStartElementExample(String data) {
         StartElementExampleData elementExampleData = JSON.parseObject(data, StartElementExampleData.class);
-        String id = elementExampleData.getRequestId();
+        String id = elementExampleData.getRequestId() + elementExampleData.getFlowElementId();
         return SpiderFlowElementExampleLog.builder()
                 .id(id)
+                .requestId(elementExampleData.getRequestId())
                 .flowElementId(elementExampleData.getFlowElementId())
                 .flowElementName(elementExampleData.getFlowElementName())
+                .functionId(elementExampleData.getFunctionId())
+                .functionName(elementExampleData.getFunctionName())
                 .branchId(elementExampleData.getBranchId())
                 .transactionGroupId(elementExampleData.getTransactionGroupId())
-                .startTime(LocalDateTime.now())
+                .startTime(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
                 .build();
     }
 
     private SpiderFlowElementExampleLog buildEndElementExample(String data) {
         EndElementExampleData elementExampleData = JSON.parseObject(data, EndElementExampleData.class);
-        String id = elementExampleData.getRequestId();
+        String id = elementExampleData.getRequestId() + elementExampleData.getFlowElementId();
         return SpiderFlowElementExampleLog.builder()
                 .id(id)
-                .endTime(LocalDateTime.now())
+                .requestId(elementExampleData.getRequestId())
+                .endTime(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+                .flowElementId(elementExampleData.getFlowElementId())
                 .requestParam(elementExampleData.getRequestParam())
-                .returnParam(Objects.isNull(elementExampleData.getReturnParam()) ? null : elementExampleData.getReturnParam().toString())
+                .returnParam(Objects.isNull(elementExampleData.getReturnParam()) ? "{}" :  JSON.toJSONString(elementExampleData.getReturnParam()))
                 .exception(elementExampleData.getException())
                 .status(elementExampleData.getStatus().name())
                 .build();
@@ -160,7 +168,7 @@ public class LogConsumer {
 
     private SpiderFlowElementExampleLog buildRunTransaction(String data) {
         StartTransactionData startTransactionData = JSON.parseObject(data, StartTransactionData.class);
-        String id = startTransactionData.getRequestId();
+        String id = startTransactionData.getRequestId() + startTransactionData.getFlowElementId();
         return SpiderFlowElementExampleLog.builder()
                 .id(id)
                 .transactionOperate(startTransactionData.getTransactionOperate().name())
@@ -170,11 +178,11 @@ public class LogConsumer {
 
     private SpiderFlowElementExampleLog buildEndTransaction(String data) {
         EndTransactionData endTransactionData = JSON.parseObject(data, EndTransactionData.class);
-        String id = endTransactionData.getRequestId();
+        String id = endTransactionData.getRequestId() + endTransactionData.getFlowElementId();
         return SpiderFlowElementExampleLog.builder()
                 .id(id)
                 .transactionStatus(endTransactionData.getTransactionStatus().name())
-                .finalEndTime(LocalDateTime.now())
+                .finalEndTime(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
                 .build();
     }
 

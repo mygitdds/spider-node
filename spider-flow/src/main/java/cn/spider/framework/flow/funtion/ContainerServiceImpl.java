@@ -93,6 +93,7 @@ public class ContainerServiceImpl implements ContainerService {
     @Override
     public Future<Void> loaderClass(JsonObject data) {
         Promise<Void> respond = Promise.promise();
+        log.info("loaderClass 请求参数 {}",data.toString());
         LoaderClassRequest request = data.mapTo(LoaderClassRequest.class);
         businessExecute.executeBlocking(promise -> {
             // 下载jar文件

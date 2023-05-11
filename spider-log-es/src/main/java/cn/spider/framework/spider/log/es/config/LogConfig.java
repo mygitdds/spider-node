@@ -1,6 +1,5 @@
 package cn.spider.framework.spider.log.es.config;
 import cn.spider.framework.spider.log.es.LogVerticle;
-import cn.spider.framework.spider.log.es.client.CustomEsClient;
 import cn.spider.framework.spider.log.es.consumer.LogConsumer;
 import cn.spider.framework.spider.log.es.queue.QueueManager;
 import cn.spider.framework.spider.log.es.service.SpiderFlowElementExampleService;
@@ -16,6 +15,8 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
 /**
  * @BelongsProject: spider-node
@@ -26,6 +27,7 @@ import org.springframework.context.annotation.Configuration;
  * @Version: 1.0
  */
 @ComponentScan("cn.spider.framework.spider.log.es.*")
+@EnableElasticsearchRepositories(basePackages = "cn.spider.framework.spider.log.es.dao")
 @Configuration
 public class LogConfig {
 
@@ -65,8 +67,9 @@ public class LogConfig {
 
     }
 
-    @Bean
-    public CustomEsClient buildCustomEsClient(RestHighLevelClient client){
-        return new CustomEsClient(client);
+    @Bean("elasticsearchTemplate")
+    public ElasticsearchRestTemplate elasticsearchRestTemplate(RestHighLevelClient client) {
+        return new ElasticsearchRestTemplate(client);
     }
+
 }

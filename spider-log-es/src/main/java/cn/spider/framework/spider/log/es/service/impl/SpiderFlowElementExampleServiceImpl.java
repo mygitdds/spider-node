@@ -1,25 +1,34 @@
 package cn.spider.framework.spider.log.es.service.impl;
+
 import cn.spider.framework.log.sdk.data.FlowElementExample;
 import cn.spider.framework.log.sdk.data.QueryFlowElementExample;
 import cn.spider.framework.log.sdk.data.QueryFlowElementExampleResponse;
-import cn.spider.framework.spider.log.es.client.CustomEsClient;
-import cn.spider.framework.spider.log.es.client.EsIndexTypeId;
-import cn.spider.framework.spider.log.es.client.PageEsData;
-import cn.spider.framework.spider.log.es.config.Constant;
+import cn.spider.framework.spider.log.es.dao.SpiderFlowElementExampleLogDao;
 import cn.spider.framework.spider.log.es.domain.SpiderFlowElementExampleLog;
 import cn.spider.framework.spider.log.es.service.SpiderFlowElementExampleService;
 import com.alibaba.fastjson.JSON;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @BelongsProject: spider-node
@@ -33,13 +42,17 @@ import java.util.Objects;
 @Service
 public class SpiderFlowElementExampleServiceImpl implements SpiderFlowElementExampleService {
 
-    @Resource
-    private CustomEsClient client;
+    @Autowired
+    private ElasticsearchRestTemplate template;
+
+    @Autowired
+    private SpiderFlowElementExampleLogDao spiderFlowElementExampleLogDao;
+
 
     @PostConstruct
-    public void init(){
-        SpiderFlowElementExampleLog elementExampleLog = new SpiderFlowElementExampleLog();
-        client.createIndex(elementExampleLog);
+    public void init() {
+        // 创建索引
+        template.createIndex(SpiderFlowElementExampleLog.class);
     }
 
     /**
@@ -48,28 +61,60 @@ public class SpiderFlowElementExampleServiceImpl implements SpiderFlowElementExa
      * @param logs
      */
     @Override
-    public void upsertBatchFlowElementExampleLog(List<EsIndexTypeId> logs) {
-        client.upsertAll(logs);
+    public void upsertBatchFlowElementExampleLog(List<SpiderFlowElementExampleLog> logs) {
+        if(CollectionUtils.isEmpty(logs)){
+            return;
+        }
+        Map<String, List<SpiderFlowElementExampleLog>> flowElementMap = logs.stream().collect(Collectors.groupingBy(SpiderFlowElementExampleLog::getId));
+        List<SpiderFlowElementExampleLog> logsNew = Lists.newArrayList();
+        for (String key : flowElementMap.keySet()) {
+            Optional<SpiderFlowElementExampleLog> spiderFlowElementExampleLog = spiderFlowElementExampleLogDao.findById(key);
+            Map<String,Object> spiderFlowMap = Maps.newHashMap();
+            if(spiderFlowElementExampleLog.isPresent()){
+                SpiderFlowElementExampleLog elementExampleLog = spiderFlowElementExampleLog.get();
+                Map<String, Object> ben2Map =
+                        JSON.parseObject(JSON.toJSONString(elementExampleLog), Map.class);
+                spiderFlowMap.putAll(ben2Map);
+            }
+            List<SpiderFlowElementExampleLog> logList = flowElementMap.get(key);
+            for(SpiderFlowElementExampleLog logNew : logList){
+                Map<String, Object> ben2Map =
+                        JSON.parseObject(JSON.toJSONString(logNew), Map.class);
+                spiderFlowMap.putAll(ben2Map);
+            }
+            logsNew.add(JSON.parseObject(JSON.toJSONString(spiderFlowMap), SpiderFlowElementExampleLog.class));
+        }
+        log.info("插入的数据为 {}",JSON.toJSONString(logsNew));
+        spiderFlowElementExampleLogDao.saveAll(logsNew);
     }
 
     @Override
     public QueryFlowElementExampleResponse queryFlowElementExampleLog(QueryFlowElementExample queryFlowElementExample) {
         QueryFlowElementExampleResponse response = new QueryFlowElementExampleResponse();
-        PageEsData<FlowElementExample> page = client.searchPage(buildFlowElementExample(queryFlowElementExample),
-                Constant.SPIDER_FLOW_ELEMENT_EXAMPLE_LOG_INDEX,Constant.SPIDER_FLOW_ELEMENT_EXAMPLE_LOG_TYPE,FlowElementExample.class);
-        response.setElementExampleList(page.getData());
-        response.setTotal(page.getTotalRows());
+        Pageable pageable = PageRequest.of(queryFlowElementExample.getPage(), queryFlowElementExample.getSize(), Sort.Direction.DESC, "startTime");
+        Page<SpiderFlowElementExampleLog> logPage = spiderFlowElementExampleLogDao.search(buildFlowElementExample(queryFlowElementExample), pageable);
+        List<SpiderFlowElementExampleLog> flowElementExampleLogs = logPage.toList();
+        List<FlowElementExample> elementExampleList = flowElementExampleLogs.stream().map(item -> {
+            FlowElementExample flowElementExample = new FlowElementExample();
+            BeanUtils.copyProperties(item, flowElementExample);
+            return flowElementExample;
+        }).collect(Collectors.toList());
+        response.setElementExampleList(elementExampleList);
+        response.setTotal(logPage.getTotalElements());
         return response;
     }
 
-    private SearchSourceBuilder buildFlowElementExample(QueryFlowElementExample queryFlowElementExample) {
+    @Override
+    public void deleteIndex() {
+        template.deleteIndex(SpiderFlowElementExampleLog.class);
+    }
+
+    private BoolQueryBuilder buildFlowElementExample(QueryFlowElementExample queryFlowElementExample) {
 
         BoolQueryBuilder defaultQueryBuilder = QueryBuilders.boolQuery();
 
-        SearchSourceBuilder searchSourceBuilder = SearchSourceBuilder.searchSource();
-
-        if (StringUtils.isNotEmpty(queryFlowElementExample.getId())) {
-            defaultQueryBuilder.should(QueryBuilders.termQuery("id", queryFlowElementExample.getId()));
+        if (StringUtils.isNotEmpty(queryFlowElementExample.getRequestId())) {
+            defaultQueryBuilder.should(QueryBuilders.termQuery("requestId", queryFlowElementExample.getRequestId()));
         }
 
         if (StringUtils.isNotEmpty(queryFlowElementExample.getRequestParam())) {
@@ -105,11 +150,7 @@ public class SpiderFlowElementExampleServiceImpl implements SpiderFlowElementExa
         if (Objects.nonNull(queryFlowElementExample.getLtTakeTime())) {
             defaultQueryBuilder.should(QueryBuilders.rangeQuery("takeTime").lt(queryFlowElementExample.getGtTakeTime()));
         }
-        searchSourceBuilder.query(defaultQueryBuilder);
-        searchSourceBuilder.size(queryFlowElementExample.getSize());
-        searchSourceBuilder.from(queryFlowElementExample.getPage());
-        return searchSourceBuilder;
-
+        return defaultQueryBuilder;
     }
 
 

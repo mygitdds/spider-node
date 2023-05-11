@@ -76,7 +76,7 @@ public class SchedulerManager {
             // 校验返回的code
             if (linkerServerResponse.getResultCode().equals(ResultCode.SUSS)) {
                 Object resultObject = JSON.parseObject(linkerServerResponse.getResultData().toString(), method.getReturnType());
-                elementExampleData.setReturnParam(JsonObject.mapFrom(resultObject));
+                elementExampleData.setReturnParam(resultObject);
                 promise.complete(resultObject);
             } else {
                 elementExampleData.setStatus(ElementStatus.FAIL);

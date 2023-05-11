@@ -1,4 +1,6 @@
 package cn.spider.framework.spider.log.es.service.impl;
+
+import cn.spider.framework.log.sdk.data.FlowElementExample;
 import cn.spider.framework.log.sdk.data.FlowExample;
 import cn.spider.framework.log.sdk.data.QueryFlowExample;
 import cn.spider.framework.log.sdk.data.QueryFlowExampleResponse;
@@ -6,22 +8,36 @@ import cn.spider.framework.spider.log.es.client.CustomEsClient;
 import cn.spider.framework.spider.log.es.client.EsIndexTypeId;
 import cn.spider.framework.spider.log.es.client.PageEsData;
 import cn.spider.framework.spider.log.es.config.Constant;
+import cn.spider.framework.spider.log.es.dao.SpiderFlowExampleLogDao;
 import cn.spider.framework.spider.log.es.domain.SpiderFlowElementExampleLog;
 import cn.spider.framework.spider.log.es.domain.SpiderFlowExampleLog;
 import cn.spider.framework.spider.log.es.service.SpiderFlowExampleLogService;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @BelongsProject: spider-node
@@ -35,14 +51,16 @@ import java.util.Objects;
 @Service
 public class SpiderFlowExampleLogServiceImpl implements SpiderFlowExampleLogService {
 
-    @Resource
-    private CustomEsClient client;
+    @Autowired
+    private ElasticsearchRestTemplate template;
+
+    @Autowired
+    private SpiderFlowExampleLogDao spiderFlowExampleLogDao;
 
 
     @PostConstruct
-    public void init(){
-        SpiderFlowExampleLog elementExampleLog = new SpiderFlowExampleLog();
-        client.createIndex(elementExampleLog);
+    public void init() {
+        template.createIndex(SpiderFlowExampleLog.class);
     }
 
     /**
@@ -50,29 +68,47 @@ public class SpiderFlowExampleLogServiceImpl implements SpiderFlowExampleLogServ
      *
      * @param logs
      */
-    public void upsetBatchFlowExampleLog(List<EsIndexTypeId> logs) {
-
+    public void upsetBatchFlowExampleLog(List<SpiderFlowExampleLog> logs) {
         if (CollectionUtils.isEmpty(logs)) {
             return;
         }
-        client.upsertAll(logs);
+        Map<String, List<SpiderFlowExampleLog>> flowExampleLogMap = logs.stream().collect(Collectors.groupingBy(SpiderFlowExampleLog::getId));
+        List<SpiderFlowExampleLog> logsNew = Lists.newArrayList();
+        for (String key : flowExampleLogMap.keySet()) {
+            Map<String, Object> spiderFlowMap = Maps.newHashMap();
+            List<SpiderFlowExampleLog> spiderFlowExampleLogs = flowExampleLogMap.get(key);
+            for (SpiderFlowExampleLog spiderFlowExampleLog : spiderFlowExampleLogs) {
+                Map<String, Object> ben2Map =
+                        JSON.parseObject(JSON.toJSONString(spiderFlowExampleLog), Map.class);
+                spiderFlowMap.putAll(ben2Map);
+            }
+            logsNew.add(JSON.parseObject(JSON.toJSONString(spiderFlowMap), SpiderFlowExampleLog.class));
+        }
+        spiderFlowExampleLogDao.saveAll(logsNew);
     }
 
 
-    public QueryFlowExampleResponse queryFlowExampleLog(QueryFlowExample queryFlowExample){
+    public QueryFlowExampleResponse queryFlowExampleLog(QueryFlowExample queryFlowExample) {
         QueryFlowExampleResponse response = new QueryFlowExampleResponse();
-        PageEsData<FlowExample> page = client.searchPage(buildFlowExample(queryFlowExample),
-                Constant.SPIDER_FLOW_EXAMPLE_LOG_INDEX,Constant.SPIDER_FLOW_EXAMPLE_LOG_TYPE,FlowExample.class);
-
-        response.setTotal(page.getTotalRows());
-        response.setFlowExampleList(page.getData());
+        Pageable pageable = PageRequest.of(queryFlowExample.getPage(), queryFlowExample.getSize(), Sort.Direction.DESC, "startTime");
+        Page<SpiderFlowExampleLog> flowElementExamplePage = spiderFlowExampleLogDao.search(buildFlowExample(queryFlowExample), pageable);
+        List<SpiderFlowExampleLog> flowExampleLogs = flowElementExamplePage.getContent();
+        List<FlowExample> flowExampleList = flowExampleLogs.stream().map(item -> {
+            FlowExample flowExample = new FlowExample();
+            BeanUtils.copyProperties(item, flowExample);
+            return flowExample;
+        }).collect(Collectors.toList());
+        response.setTotal(flowElementExamplePage.getTotalElements());
+        response.setFlowExampleList(flowExampleList);
         return response;
     }
 
-    private SearchSourceBuilder buildFlowExample(QueryFlowExample queryFlowExample) {
+    @Override
+    public void deleteIndex() {
+        template.deleteIndex(SpiderFlowExampleLog.class);
+    }
 
-        SearchSourceBuilder searchSourceBuilder = SearchSourceBuilder.searchSource();
-
+    private BoolQueryBuilder buildFlowExample(QueryFlowExample queryFlowExample) {
         BoolQueryBuilder defaultQueryBuilder = QueryBuilders.boolQuery();
         if (StringUtils.isNotEmpty(queryFlowExample.getBusinessParam())) {
             defaultQueryBuilder.should(QueryBuilders.queryStringQuery(queryFlowExample.getBusinessParam()).field("requestParam"));
@@ -105,10 +141,6 @@ public class SpiderFlowExampleLogServiceImpl implements SpiderFlowExampleLogServ
         if (Objects.nonNull(queryFlowExample.getLtTakeTime())) {
             defaultQueryBuilder.should(QueryBuilders.rangeQuery("takeTime").lt(queryFlowExample.getGtTakeTime()));
         }
-
-        searchSourceBuilder.query(defaultQueryBuilder);
-        searchSourceBuilder.size(queryFlowExample.getSize());
-        searchSourceBuilder.from(queryFlowExample.getPage());
-        return searchSourceBuilder;
+        return defaultQueryBuilder;
     }
 }

@@ -1,5 +1,7 @@
 package cn.spider.framework.spider.log.es.client;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Maps;
+import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
@@ -31,6 +33,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -116,15 +119,30 @@ public class CustomEsClient implements Closeable {
      * @return 响应信息，放入es的基本信息(index、type、id)
      */
     public BulkResponse upsertAll(List<EsIndexTypeId> ts) {
+        EsIndexTypeId indexTypeId = ts.get(0);
+        Map<Object,List<EsIndexTypeId>> dataMap = ts.stream().collect(Collectors.groupingBy(EsIndexTypeId :: id));
+        Map<Object,Map<String,Object>> esIndexTypeIdMap = Maps.newHashMap();
+
+        dataMap.forEach((key,value)->{
+            List<EsIndexTypeId> datas = value;
+            Map<String,Object> exampleMap = Maps.newHashMap();
+            for(EsIndexTypeId esIndexTypeId : datas){
+                JsonObject esIndexJson = JsonObject.mapFrom(esIndexTypeId);
+                exampleMap.putAll(esIndexJson.getMap());
+            }
+            esIndexTypeIdMap.put(key,exampleMap);
+        });
+        return upsertAll0perate(esIndexTypeIdMap,indexTypeId.index(),indexTypeId.type());
+    }
+
+
+    public BulkResponse upsertAll0perate( Map<Object, Map<String,Object>> esIndexTypeIdMap,String index, String type) {
         BulkRequest bulkRequest = new BulkRequest();
         IndexRequest request;
-        for (EsIndexTypeId t : ts) {
-            if (checkIndexTypeId(t)) {
-                continue;
-            }
-            final String jsonString = JSONObject.toJSONString(t);
-            log.info("index {} type {}",t.index(),t.type());
-            request = new IndexRequest(t.index(), t.type(), String.valueOf(t.id()))
+        for(Object key : esIndexTypeIdMap.keySet()){
+            Map<String,Object> dataMap = esIndexTypeIdMap.get(key);
+            final String jsonString = JSONObject.toJSONString(dataMap);
+            request = new IndexRequest(index, type, String.valueOf(key))
                     .source(jsonString, XContentType.JSON).timeout(TimeValue.timeValueSeconds(timeOut));
             bulkRequest.add(request);
         }

@@ -28,6 +28,7 @@ import cn.spider.framework.flow.monitor.RecallStory;
 import cn.spider.framework.flow.role.Role;
 import cn.spider.framework.flow.util.AssertUtil;
 import cn.spider.framework.flow.util.LambdaUtil;
+import com.alibaba.fastjson.JSON;
 
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Consumer;

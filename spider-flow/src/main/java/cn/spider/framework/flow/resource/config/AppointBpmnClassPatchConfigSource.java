@@ -15,8 +15,7 @@ import java.util.stream.Collectors;
  */
 public class AppointBpmnClassPatchConfigSource extends ClassPathConfigSource implements ConfigSource {
 
-    public AppointBpmnClassPatchConfigSource(String configName) {
-        super(configName);
+    public AppointBpmnClassPatchConfigSource() {
     }
 
     @Override

@@ -57,13 +57,13 @@ public class ConfigResourceResolver implements ApplicationContextAware {
     @Bean
     @Conditional(ConfigResourceResolver.ClassPathSourceCondition.class)
     public ConfigSource getBpmnClassPathConfigSource() {
-        return new BpmnClassPathConfigSource(getBpmnPath());
+        return new BpmnClassPathConfigSource();
     }
 
 
     @Bean
     public ConfigSource AppointBpmnClassPatchConfigSource() {
-        return new AppointBpmnClassPatchConfigSource(getBpmnPath());
+        return new AppointBpmnClassPatchConfigSource();
     }
 
     @Bean
@@ -74,7 +74,7 @@ public class ConfigResourceResolver implements ApplicationContextAware {
     @Bean
     @Conditional(ConfigResourceResolver.PropertiesSourceCondition.class)
     public ConfigSource getPropertiesClassPathConfigSource() {
-        return new PropertiesClassPathConfigSource(getPropertiesPath());
+        return new PropertiesClassPathConfigSource();
     }
 
     @Bean
@@ -99,25 +99,10 @@ public class ConfigResourceResolver implements ApplicationContextAware {
         this.applicationContext = GlobalUtil.transferNotEmpty(applicationContext, ConfigurableApplicationContext.class);
     }
 
-    private static String getBpmnPath() {
-        Vertx clusterVertx = SpiderCoreVerticle.clusterVertx;
-        SharedData sharedData = clusterVertx.sharedData();
-        LocalMap<String,String> localMap = sharedData.getLocalMap("config");
-        return localMap.get("static-fill-Patch");
-    }
-
     /**
      * 配置远程的配置数据
      * @return
      */
-    private static String getPropertiesPath() {
-        // 从vertx中读取
-        Vertx clusterVertx = SpiderCoreVerticle.clusterVertx;
-        SharedData sharedData = clusterVertx.sharedData();
-        LocalMap<String,String> localMap = sharedData.getLocalMap("config");
-        return localMap.get("static-fill-Patch");
-    }
-
     private static EnableKstry getEnableKstryAnn(ListableBeanFactory beanFactory) {
         Map<String, Object> enableKstryMap = beanFactory.getBeansWithAnnotation(EnableKstry.class);
         AssertUtil.oneSize(enableKstryMap.values(), ExceptionEnum.ENABLE_KSTRY_NUMBER_ERROR);
@@ -131,8 +116,8 @@ public class ConfigResourceResolver implements ApplicationContextAware {
 
         @Override
         public boolean matches(ConditionContext context, @Nonnull AnnotatedTypeMetadata metadata) {
-            String bpmnPath = getBpmnPath();
-            return StringUtils.isNotBlank(bpmnPath);
+
+            return true;
         }
     }
 
@@ -140,8 +125,7 @@ public class ConfigResourceResolver implements ApplicationContextAware {
 
         @Override
         public boolean matches(ConditionContext context, @Nonnull AnnotatedTypeMetadata metadata) {
-            String propertiesPath = getPropertiesPath();
-            return StringUtils.isNotBlank(propertiesPath);
+            return true;
         }
     }
 

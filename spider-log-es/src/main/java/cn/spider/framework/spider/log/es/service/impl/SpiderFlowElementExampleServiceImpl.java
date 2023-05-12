@@ -97,6 +97,10 @@ public class SpiderFlowElementExampleServiceImpl implements SpiderFlowElementExa
         List<FlowElementExample> elementExampleList = flowElementExampleLogs.stream().map(item -> {
             FlowElementExample flowElementExample = new FlowElementExample();
             BeanUtils.copyProperties(item, flowElementExample);
+            if(Objects.isNull(flowElementExample.getStartTime()) || Objects.isNull(flowElementExample.getEndTime())){
+                return flowElementExample;
+            }
+            flowElementExample.setTakeTime(flowElementExample.getEndTime()-flowElementExample.getStartTime());
             return flowElementExample;
         }).collect(Collectors.toList());
         response.setElementExampleList(elementExampleList);

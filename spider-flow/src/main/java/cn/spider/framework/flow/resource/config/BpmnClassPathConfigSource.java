@@ -29,8 +29,7 @@ import cn.spider.framework.flow.enums.ResourceTypeEnum;
  */
 public class BpmnClassPathConfigSource extends ClassPathConfigSource implements ConfigSource {
 
-    public BpmnClassPathConfigSource(String configName) {
-        super(configName);
+    public BpmnClassPathConfigSource() {
     }
 
     @Override

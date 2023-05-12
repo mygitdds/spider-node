@@ -9,4 +9,6 @@ public class UploadBpmnParam {
 
     private BpmnStatus status;
 
+    private String url;
+
 }

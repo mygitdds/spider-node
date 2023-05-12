@@ -33,8 +33,7 @@ public class PropertiesClassPathConfigSource extends ClassPathConfigSource imple
 
     private final List<String> YAML_SUFFIX_NAME_LIST = Lists.newArrayList(".yaml", ".yml");
 
-    public PropertiesClassPathConfigSource(String configName) {
-        super(configName);
+    public PropertiesClassPathConfigSource() {
     }
 
     @Override

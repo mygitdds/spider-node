@@ -53,7 +53,7 @@ public class InitLoaderClassService {
                 return;
             }
             try {
-                classLoaderManager.loaderUrlJar(request.getJarName(), request.getClassPath());
+                classLoaderManager.loaderUrlJar(request.getJarName(), request.getClassPath(),request.getUrl());
             } catch (Exception e) {
                 log.error("加载失败的 jar {}",key);
             }

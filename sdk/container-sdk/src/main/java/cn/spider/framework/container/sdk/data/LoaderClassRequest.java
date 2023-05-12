@@ -16,7 +16,17 @@ public class LoaderClassRequest {
 
     private String classPath;
 
+    private String url;
+
     private JarStatus status;
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
 
     public String getJarName() {
         return jarName;

@@ -56,5 +56,4 @@ public class EndElementExampleData extends EventData {
      */
     private ElementStatus status;
 
-
 }

@@ -14,7 +14,17 @@ public class DeployBpmnRequest {
 
     private String bpmnName;
 
+    private String url;
+
     private BpmnStatus status;
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
 
     public String getBpmnName() {
         return bpmnName;

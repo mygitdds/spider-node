@@ -1,5 +1,9 @@
 package cn.spider.framework.log.sdk.data;
 
+import cn.spider.framework.common.utils.ExceptionMessage;
+import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
+
 import java.time.LocalDateTime;
 
 /**
@@ -40,7 +44,7 @@ public class FlowElementExample {
     /**
      * 节点执行参数
      */
-    private String requestParam;
+    private JsonObject requestParam;
 
     /**
      * 功能名称
@@ -50,7 +54,7 @@ public class FlowElementExample {
     /**
      * 该节点返回参数
      */
-    private String returnParam;
+    private JsonObject returnParam;
 
     /**
      * 异常
@@ -125,12 +129,20 @@ public class FlowElementExample {
         this.functionId = functionId;
     }
 
-    public String getRequestParam() {
+    public JsonObject getRequestParam() {
         return requestParam;
     }
 
     public void setRequestParam(String requestParam) {
-        this.requestParam = requestParam;
+        if(StringUtils.isEmpty(requestParam)){
+            this.requestParam = new JsonObject();
+            return;
+        }
+        try {
+            this.requestParam = new JsonObject(requestParam);
+        } catch (Exception e) {
+            this.requestParam = new JsonObject().put("exception", ExceptionMessage.getStackTrace(e));
+        }
     }
 
     public String getFunctionName() {
@@ -141,12 +153,20 @@ public class FlowElementExample {
         this.functionName = functionName;
     }
 
-    public String getReturnParam() {
+    public JsonObject getReturnParam() {
         return returnParam;
     }
 
     public void setReturnParam(String returnParam) {
-        this.returnParam = returnParam;
+        if(StringUtils.isEmpty(returnParam)){
+            this.requestParam = new JsonObject();
+            return;
+        }
+        try {
+            this.returnParam = new JsonObject(returnParam);
+        } catch (Exception e) {
+            this.returnParam = new JsonObject().put("exception", ExceptionMessage.getStackTrace(e));
+        }
     }
 
     public String getException() {

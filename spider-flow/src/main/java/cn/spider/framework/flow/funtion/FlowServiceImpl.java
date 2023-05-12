@@ -60,7 +60,8 @@ public class FlowServiceImpl implements FlowService {
         Promise<JsonObject> promise = Promise.promise();
         StartFlowRequest request = data.mapTo(StartFlowRequest.class);
         BusinessFunctions functions  = businessManager.queryStartIdByFunctionId(request.getFunctionId());
-
+        // 获取参数
+        Object requestParam = request.getRequest(classLoaderManager.queryClassLoader(request.getRequestClassType()));
         String requestId = buildRequestId();
         StoryRequest<Object> req = ReqBuilder.returnType(Object.class)
                 .startId(functions.getStartId())
@@ -70,8 +71,9 @@ public class FlowServiceImpl implements FlowService {
                  // 默认给leader
                 .flowExampleRole(FlowExampleRole.LEADER)
                 .functionId(functions.getId())
-                .request(request.getRequest(classLoaderManager.queryClassLoader(request.getRequestClassType())))
+                .request(requestParam)
                 .build();
+
         if(Objects.nonNull(request.getVariableKey())){
             InScopeData varScopeData = new InScopeData(ScopeTypeEnum.VARIABLE,requestId);
             varScopeData.put(request.getVariableKey(),varScopeData);

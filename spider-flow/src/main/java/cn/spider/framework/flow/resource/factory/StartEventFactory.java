@@ -96,10 +96,10 @@ public class StartEventFactory extends BasicResourceFactory<StartEvent> {
     /**
      * 动态加载bmpm文件到内核中来
      *
-     * @param bpmnName 指定的bpmn名称
+     * @param url 指定的bpmn名称
      */
-    public void dynamicsLoaderBpmn(String bpmnName) {
-        List<ConfigResource> configResourceList = getConfigResource(ResourceTypeEnum.APPOINT_BPMN, bpmnName);
+    public void dynamicsLoaderBpmn(String url) {
+        List<ConfigResource> configResourceList = getConfigResource(ResourceTypeEnum.APPOINT_BPMN, url);
         if (CollectionUtils.isEmpty(configResourceList)) {
             return;
         }
@@ -124,8 +124,8 @@ public class StartEventFactory extends BasicResourceFactory<StartEvent> {
         startEventContainer.refreshStartEvent(startEventList);
     }
 
-    public void destroyBpmn(String bpmnName){
-        List<ConfigResource> configResourceList = getConfigResource(ResourceTypeEnum.APPOINT_BPMN, bpmnName);
+    public void destroyBpmn(String url){
+        List<ConfigResource> configResourceList = getConfigResource(ResourceTypeEnum.APPOINT_BPMN, url);
         if (CollectionUtils.isEmpty(configResourceList)) {
             return;
         }

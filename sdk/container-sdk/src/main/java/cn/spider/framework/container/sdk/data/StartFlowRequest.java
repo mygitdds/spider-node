@@ -17,8 +17,6 @@ public class StartFlowRequest {
 
     private String variableKey;
 
-    private String businessNo;
-
     private String requestClassType;
 
     public String getRequestClassType() {
@@ -27,14 +25,6 @@ public class StartFlowRequest {
 
     public void setRequestClassType(String requestClassType) {
         this.requestClassType = requestClassType;
-    }
-
-    public String getBusinessNo() {
-        return businessNo;
-    }
-
-    public void setBusinessNo(String businessNo) {
-        this.businessNo = businessNo;
     }
 
     public String getFunctionId() {
@@ -51,6 +41,10 @@ public class StartFlowRequest {
 
     public void setVariableKey(String variableKey) {
         this.variableKey = variableKey;
+    }
+
+    public Object getRequest(){
+        return this.request;
     }
 
     public Object getRequest(ClassLoader classLoader) {

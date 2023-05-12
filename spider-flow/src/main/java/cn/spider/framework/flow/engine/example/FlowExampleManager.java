@@ -264,7 +264,7 @@ public class FlowExampleManager {
                 .functionId(storyRequest.getFunctionId())
                 .requestId(exampleId)
                 .requestClassType(storyRequest.getRequestParam().getRequestClassType())
-                .requestParam(JsonObject.mapFrom(storyRequest.getRequest()))
+                .requestParam(storyRequest.getRequestParam())
                 .startId(flowRegister.getStartEventId())
                 .build();
         //发送事件

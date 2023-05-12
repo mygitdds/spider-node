@@ -42,6 +42,8 @@ public class QueryFlowExample {
      */
     private LocalDateTime endTime;
 
+    private String brokerName;
+
     private int page;
 
     private int size;
@@ -55,6 +57,14 @@ public class QueryFlowExample {
      * 耗时
      */
     private Long ltTakeTime;
+
+    public String getBrokerName() {
+        return brokerName;
+    }
+
+    public void setBrokerName(String brokerName) {
+        this.brokerName = brokerName;
+    }
 
     public Long getGtTakeTime() {
         return gtTakeTime;

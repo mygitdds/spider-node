@@ -55,7 +55,7 @@ public class StartFlowExampleHandler implements InitializingBean {
             }
 
             StartFlowExampleEventData eventData = JSON.parseObject(message.body(), StartFlowExampleEventData.class);
-            StartFlowRequest request = eventData.getRequestParam().mapTo(StartFlowRequest.class);
+            StartFlowRequest request = JSON.parseObject(JSON.toJSONString(eventData.getRequestParam()),StartFlowRequest.class);
             StoryRequest<Object> storyRequest = ReqBuilder.returnType(Object.class)
                     .startId(eventData.getStartId())
                     .functionName(eventData.getFunctionName())

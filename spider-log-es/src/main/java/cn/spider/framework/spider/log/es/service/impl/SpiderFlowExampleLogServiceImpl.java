@@ -24,6 +24,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.beans.BeanCopier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -96,6 +97,10 @@ public class SpiderFlowExampleLogServiceImpl implements SpiderFlowExampleLogServ
         List<FlowExample> flowExampleList = flowExampleLogs.stream().map(item -> {
             FlowExample flowExample = new FlowExample();
             BeanUtils.copyProperties(item, flowExample);
+            if(Objects.isNull(flowExample.getStartTime()) || Objects.isNull(flowExample.getEndTime())){
+                return flowExample;
+            }
+            flowExample.setTakeTime(flowExample.getEndTime() - flowExample.getStartTime());
             return flowExample;
         }).collect(Collectors.toList());
         response.setTotal(flowElementExamplePage.getTotalElements());
@@ -109,6 +114,7 @@ public class SpiderFlowExampleLogServiceImpl implements SpiderFlowExampleLogServ
     }
 
     private BoolQueryBuilder buildFlowExample(QueryFlowExample queryFlowExample) {
+
         BoolQueryBuilder defaultQueryBuilder = QueryBuilders.boolQuery();
         if (StringUtils.isNotEmpty(queryFlowExample.getBusinessParam())) {
             defaultQueryBuilder.should(QueryBuilders.queryStringQuery(queryFlowExample.getBusinessParam()).field("requestParam"));
@@ -116,6 +122,10 @@ public class SpiderFlowExampleLogServiceImpl implements SpiderFlowExampleLogServ
 
         if (StringUtils.isNotEmpty(queryFlowExample.getId())) {
             defaultQueryBuilder.should(QueryBuilders.queryStringQuery(queryFlowExample.getId()).field("id"));
+        }
+
+        if(StringUtils.isNotEmpty(queryFlowExample.getBrokerName())){
+            defaultQueryBuilder.should(QueryBuilders.termQuery("brokerName", queryFlowExample.getBrokerName()));
         }
 
         if (StringUtils.isNotEmpty(queryFlowExample.getFunctionName())) {

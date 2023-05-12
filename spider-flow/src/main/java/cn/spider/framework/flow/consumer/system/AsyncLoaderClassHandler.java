@@ -51,7 +51,7 @@ public class AsyncLoaderClassHandler implements InitializingBean {
                 return;
             }
             LoaderClassData loaderClassData = JSON.parseObject(message.body(),LoaderClassData.class);
-            classLoaderManager.loaderUrlJar(loaderClassData.getJarName(), loaderClassData.getClassPath());
+            classLoaderManager.loaderUrlJar(loaderClassData.getJarName(), loaderClassData.getClassPath(),loaderClassData.getUrl());
         });
     }
 

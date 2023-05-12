@@ -77,7 +77,6 @@ public class QueueManager {
             List<SpiderFlowExampleLog> flowExampleLogs = Lists.newArrayList();
             for (String value : list) {
                 JsonObject example = new JsonObject(value);
-                log.info("日志数据为 {}", value);
                 ElementExampleLog elementExampleLog = ElementExampleLog.builder()
                         .exampleType(ExampleType.valueOf(example.getString("exampleType")))
                         .build();

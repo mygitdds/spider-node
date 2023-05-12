@@ -6,6 +6,7 @@ import cn.spider.framework.flow.exception.KstryException;
 import com.flow.cloud.start.config.StartConfig;
 import com.flow.cloud.start.util.ExceptionMessage;
 import com.flow.cloud.start.util.PropertyReader;
+import com.hazelcast.config.Config;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -37,8 +38,10 @@ public class SpiderStart {
     public static void main(String[] args) {
         // 设置启动图案
         banner(1);
+
+        Config hazelcastConfig = Config.load();
         // 设置集群类型
-        ClusterManager clusterManager = new HazelcastClusterManager();
+        ClusterManager clusterManager = new HazelcastClusterManager(hazelcastConfig);
         VertxOptions options = new VertxOptions().setClusterManager(clusterManager);
         options.setWorkerPoolSize(10);
 

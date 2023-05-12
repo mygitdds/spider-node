@@ -43,7 +43,7 @@ public class StartFlowExampleEventData extends EventData {
     /**
      * 请求参数
      */
-    private JsonObject requestParam;
+    private Object requestParam;
 
     /**
      * 请求参数的class路径

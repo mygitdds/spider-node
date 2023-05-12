@@ -10,6 +10,9 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 /**
  * @BelongsProject: spider-node
  * @BelongsPackage: cn.spider.framework.common.event
@@ -40,6 +43,7 @@ public class EventManager {
         DeliveryOptions options = new DeliveryOptions();
         options.addHeader(Constant.BROKER_NAME, brokerName);
         options.addHeader(Constant.EVENT_NAME, eventType.getName());
+        eventData.setTime(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
         // 告知 谁是消费者
         JsonObject param = JsonObject.mapFrom(eventData);
         String paramString = param.toString();

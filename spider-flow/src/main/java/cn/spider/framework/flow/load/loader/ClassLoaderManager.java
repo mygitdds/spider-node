@@ -66,12 +66,12 @@ public class ClassLoaderManager {
      * @param name
      * @param classPath
      */
-    public void loaderUrlJar(String name, String classPath) {
+    public void loaderUrlJar(String name, String classPath,String url) {
         try {
             // 卸载
             unloadJar(name);
             // step1: 构造url -- 从配置中获取（后续改造）
-            URL jar = new URL("jar:" + this.staticFillRoute + name + "!/");
+            URL jar = new URL("jar:" + url + "!/");
             // step2: 创建 appointClassLoader
             AppointClassLoader appointClassLoader = new AppointClassLoader(jar, this.getClass().getClassLoader());
             // step3: 进行加载替换

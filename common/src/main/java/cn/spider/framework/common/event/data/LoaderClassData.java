@@ -19,4 +19,6 @@ public class LoaderClassData extends EventData {
     private String classPath;
 
     private JarStatus status;
+
+    private String url;
 }

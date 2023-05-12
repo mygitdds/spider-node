@@ -67,6 +67,7 @@ public class LogConsumer {
                 }
                 ElementExampleLog elementExampleLog = ElementExampleLog.builder().build();
                 String data = message.body();
+                log.info("获取到写入日志的参数 {}",data);
                 switch (eventName) {
                     case "start_flow_example":
                         elementExampleLog.setExampleType(ExampleType.FLOW);
@@ -114,8 +115,8 @@ public class LogConsumer {
                 .brokerName(brokerName)
                 .functionId(startFlowExampleEventData.getFunctionId())
                 .functionName(startFlowExampleEventData.getFunctionName())
-                .requestParam(startFlowExampleEventData.getRequestParam().toString())
-                .startTime(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+                .requestParam(Objects.isNull(startFlowExampleEventData.getRequestParam()) ? "{}" : JSON.toJSONString(startFlowExampleEventData.getRequestParam()))
+                .startTime(startFlowExampleEventData.getTime())
                 .build();
 
     }
@@ -125,7 +126,7 @@ public class LogConsumer {
         String id = elementExampleData.getRequestId();
         return SpiderFlowExampleLog.builder()
                 .id(id)
-                .endTime(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+                .endTime(elementExampleData.getTime())
                 .returnParam(elementExampleData.getResult().toString())
                 .exception(elementExampleData.getException())
                 .status(elementExampleData.getStatus().name())
@@ -146,7 +147,7 @@ public class LogConsumer {
                 .functionName(elementExampleData.getFunctionName())
                 .branchId(elementExampleData.getBranchId())
                 .transactionGroupId(elementExampleData.getTransactionGroupId())
-                .startTime(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+                .startTime(elementExampleData.getTime())
                 .build();
     }
 
@@ -156,7 +157,7 @@ public class LogConsumer {
         return SpiderFlowElementExampleLog.builder()
                 .id(id)
                 .requestId(elementExampleData.getRequestId())
-                .endTime(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+                .endTime(elementExampleData.getTime())
                 .flowElementId(elementExampleData.getFlowElementId())
                 .requestParam(elementExampleData.getRequestParam())
                 .returnParam(Objects.isNull(elementExampleData.getReturnParam()) ? "{}" :  JSON.toJSONString(elementExampleData.getReturnParam()))

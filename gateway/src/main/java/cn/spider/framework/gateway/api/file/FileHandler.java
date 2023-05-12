@@ -10,6 +10,7 @@ import com.alibaba.fastjson.JSON;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.Router;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -18,6 +19,7 @@ import org.springframework.util.ClassUtils;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.util.List;
 
 /**
  * @BelongsProject: spider-node
@@ -54,6 +56,7 @@ public class FileHandler {
                         HttpServerResponse response = ctx.response();
                         response.putHeader("content-type", "application/json");
                         String uploadedFileName = (new File(path, upload.filename())).getPath();
+
                         Future<Void> fut = upload.streamToFileSystem(uploadedFileName);
                         fut.onSuccess(suss -> {
                             log.info("文件名称 {} 上传成功", upload.filename());
@@ -64,6 +67,14 @@ public class FileHandler {
                             response.end(ResponseData.fail(fail));
                         });
                     });
+                });
+    }
+
+    public void uploadJarOther() {
+        router.post("/upload/jar_other")
+                .handler(ctx -> {
+                    List<FileUpload> uploads = ctx.fileUploads();
+
                 });
     }
 

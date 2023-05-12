@@ -46,14 +46,8 @@ import org.springframework.data.redis.core.RedisTemplate;
  */
 public abstract class ClassPathConfigSource implements ConfigSource {
 
-    /**
-     * 配置路径- 配置的url前缀
-     */
-    private final String configName;
+    public ClassPathConfigSource() {
 
-    public ClassPathConfigSource(String configName) {
-        AssertUtil.notBlank(configName);
-        this.configName = configName;
     }
 
     protected List<Resource> getResourceList() {
@@ -70,7 +64,7 @@ public abstract class ClassPathConfigSource implements ConfigSource {
                 }
                 Resource[] resources = null;
                 try {
-                    resources = resolver.getResources(configName + uploadBpmnParam.getBpmnName());
+                    resources = resolver.getResources(uploadBpmnParam.getUrl());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -85,11 +79,11 @@ public abstract class ClassPathConfigSource implements ConfigSource {
         return resourceList;
     }
 
-    protected List<Resource> getResourceList(String fillName) {
+    protected List<Resource> getResourceList(String url) {
         ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         List<Resource> resourceList = new ArrayList<>();
         try {
-            Resource[] resources = resolver.getResources(configName + fillName);
+            Resource[] resources = resolver.getResources(url);
             for (Resource resource : resources) {
                 resourceList.add(resource);
             }

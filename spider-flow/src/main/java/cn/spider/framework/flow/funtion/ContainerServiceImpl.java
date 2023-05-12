@@ -60,7 +60,7 @@ public class ContainerServiceImpl implements ContainerService {
         businessExecute.executeBlocking(promises -> {
             try {
                 DeployBpmnRequest request = data.mapTo(DeployBpmnRequest.class);
-                startEventFactory.dynamicsLoaderBpmn(request.getBpmnName());
+                startEventFactory.dynamicsLoaderBpmn(request.getUrl());
                 DeployBpmnData deployBpmnData = data.mapTo(DeployBpmnData.class);
                 deployBpmnData.setStatus(BpmnStatus.ENABLE);
                 eventManager.sendMessage(EventType.DEPLOY_BPMN, deployBpmnData);
@@ -98,7 +98,7 @@ public class ContainerServiceImpl implements ContainerService {
         businessExecute.executeBlocking(promise -> {
             // 下载jar文件
             try {
-                classLoaderManager.loaderUrlJar(request.getJarName(), request.getClassPath());
+                classLoaderManager.loaderUrlJar(request.getJarName(), request.getClassPath(),request.getUrl());
                 LoaderClassData loaderClassData = data.mapTo(LoaderClassData.class);
                 eventManager.sendMessage(EventType.LOADER_JAR, loaderClassData);
                 promise.complete();

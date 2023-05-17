@@ -31,5 +31,13 @@ public class BrokerInfoUtil {
         return Integer.parseInt(localMap.get("broker-transcript-num"));
     }
 
+    public static String queryRpcType(Vertx vertx){
+        SharedData sharedData = vertx.sharedData();
+        LocalMap<String, String> localMap = sharedData.getLocalMap("config");
+        return localMap.get("rpc-type");
+    }
+
+
+
 
 }

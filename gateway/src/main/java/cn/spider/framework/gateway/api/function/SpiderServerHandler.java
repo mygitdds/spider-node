@@ -84,6 +84,7 @@ public class SpiderServerHandler {
         functionStateChange();
         deleteFunction();
         deleteAllFunction();
+        health();
     }
 
     public void selectBpmn() {
@@ -366,6 +367,18 @@ public class SpiderServerHandler {
                     });
                 });
     }
+
+
+    private void health() {
+        router.post("/health")
+                .handler(ctx -> {
+                    HttpServerResponse response = ctx.response();
+                    response.putHeader("content-type", "application/json");
+                    response.end(ResponseData.suss());
+                });
+    }
+
+
 
 
 }

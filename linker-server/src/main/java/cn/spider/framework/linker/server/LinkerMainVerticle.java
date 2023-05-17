@@ -47,7 +47,7 @@ public class LinkerMainVerticle extends AbstractVerticle {
         this.brokerName = BrokerInfoUtil.queryBrokerName(vertx);
         this.factory = new AnnotationConfigApplicationContext(SpringConfig.class);
         ClientRegisterCenter clientRegisterCenter = factory.getBean(ClientRegisterCenter.class);
-        LinkerService linkerService = new LinkerServiceImpl(clientRegisterCenter);
+        LinkerService linkerService = new LinkerServiceImpl(clientRegisterCenter,vertx);
         // 发布接口
         this.binder = new ServiceBinder(vertx);
         MessageConsumer<JsonObject> linkerConsumer = binder.setAddress(this.brokerName + LinkerService.ADDRESS)

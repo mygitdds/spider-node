@@ -34,40 +34,7 @@ public class GatewayVerticle extends AbstractVerticle {
     this.clusterVertx = vertx;
     // 启动spring-ioc
     this.factory = new AnnotationConfigApplicationContext(SpringConfig.class);
-
-    HttpServer server = vertx.createHttpServer();
-    // 跟ui交互的router
-    Router fillRouter = Router.router(vertx);
-    // 设置 跨域
-    fillRouter.route().handler(CorsHandler.create()
-            .addOrigin("*")
-            .allowedHeader(" x-www-form-urlencoded, Content-Type,x-requested-with")
-            .allowedMethod(HttpMethod.GET)
-            .allowedMethod(HttpMethod.POST)
-            .allowedMethod(HttpMethod.PUT)
-            .allowedMethod(HttpMethod.DELETE));
-    server.requestHandler(fillRouter).listen(9674);
-    // 给apiRouter添加 对于路径的handler
-    FileHandler fileApi = factory.getBean(FileHandler.class);
-    fileApi.init(fillRouter);
-    // 查询文件的router
-    Router staticRouter = Router.router(vertx);
-    // 设置跨域
-    staticRouter.route().handler(CorsHandler.create()
-            .addOrigin("*")
-            .allowedHeader(" x-www-form-urlencoded, Content-Type,x-requested-with")
-            .allowedMethod(HttpMethod.GET)
-            .allowedMethod(HttpMethod.POST)
-            .allowedMethod(HttpMethod.PUT)
-            .allowedMethod(HttpMethod.DELETE));
-    // 该下面文件,通过
-    staticRouter.route("/*")
-            .handler(StaticHandler.create("file"));
-    HttpServer serverStatic = vertx.createHttpServer();
-    serverStatic.requestHandler(staticRouter).listen(9675);
-
     Router apiRouter = Router.router(vertx);
-
     apiRouter.route().handler(CorsHandler.create()
             .addOrigin("*")
             .allowedHeader(" x-www-form-urlencoded, Content-Type,x-requested-with")

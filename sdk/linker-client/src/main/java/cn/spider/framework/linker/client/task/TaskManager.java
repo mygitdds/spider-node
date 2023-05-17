@@ -1,20 +1,15 @@
-package cn.spider.framework.linker.client.grpc;
+package cn.spider.framework.linker.client.task;
 
 import cn.spider.framework.common.utils.ExceptionMessage;
-import cn.spider.framework.linker.client.config.RpcConst;
-import cn.spider.framework.linker.client.task.TaskManager;
-import cn.spider.framework.linker.client.util.IpUtil;
 import cn.spider.framework.linker.sdk.data.LinkerServerRequest;
+import cn.spider.framework.linker.sdk.data.LinkerServerResponse;
+import cn.spider.framework.linker.sdk.data.ResultCode;
 import cn.spider.framework.linker.sdk.data.TransactionalType;
-import cn.spider.framework.proto.grpc.TransferRequest;
 import cn.spider.framework.proto.grpc.TransferResponse;
-import cn.spider.framework.proto.grpc.VertxTransferServerGrpc;
 import com.alibaba.fastjson.JSON;
-import io.vertx.core.Future;
+import com.alibaba.fastjson.JSONObject;
 import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.grpc.VertxServer;
-import io.vertx.grpc.VertxServerBuilder;
+import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.DefaultParameterNameDiscoverer;
@@ -25,86 +20,124 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.util.ReflectionUtils;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.net.SocketException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 /**
- * @program: spider-node
- * @description: 接受spider-服务端请求并且执行
- * @author: dds
- * @create: 2023-03-02 21:25
+ * @BelongsProject: spider-node
+ * @BelongsPackage: cn.spider.framework.linker.client.vertxrpc
+ * @Author: dengdongsheng
+ * @CreateTime: 2023-05-16  14:43
+ * @Description: 任务管理
+ * @Version: 1.0
  */
-
-public class TransferServerHandler {
-
-    private Vertx vertx;
+public class TaskManager {
 
     private ApplicationContext applicationContext;
 
     private Executor taskPool;
 
-    private String localhost;
-
-    private static final ParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
-
     private Map<String, Method> methodMap;
 
     private final String TRANSACTION_MANAGER = "spiderTransactionManager";
 
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TransferServerHandler.class);
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TaskManager.class);
 
     private PlatformTransactionManager platformTransactionManager;
 
     private TransactionDefinition transactionDefinition;
 
-    private TaskManager taskManager;
-
-
-    public void init(Vertx vertx, ApplicationContext applicationContext, Executor taskPool, PlatformTransactionManager platformTransactionManager, TransactionDefinition transactionDefinition,TaskManager taskManager) {
-        this.vertx = vertx;
+    public TaskManager(ApplicationContext applicationContext,
+                       Executor taskPool,
+                       PlatformTransactionManager platformTransactionManager,
+                       TransactionDefinition transactionDefinition){
         this.applicationContext = applicationContext;
         this.taskPool = taskPool;
         this.platformTransactionManager = platformTransactionManager;
         this.transactionDefinition = transactionDefinition;
-        try {
-            this.localhost = IpUtil.buildLocalHost();
-        } catch (SocketException e) {
-            throw new RuntimeException(e);
-        }
-        this.methodMap = new ConcurrentHashMap<>();
-        this.taskManager = taskManager;
-        run();
+        this.methodMap = new HashMap<>();
     }
 
-    // 跟客户端功能交互
-    public void run() {
-        VertxServer server = VertxServerBuilder
-                .forAddress(vertx, this.localhost, RpcConst.PORT)
-                // 添加服务的实现
-                .addService(new VertxTransferServerGrpc.TransferServerVertxImplBase() {
-                    @Override
-                    public Future<TransferResponse> instruct(TransferRequest transferRequest) {
-                        // 构造Promise对象
-                        Promise<TransferResponse> transferResponsePromise = Promise.promise();
-                        // 获取请求中的body
-                        String body = transferRequest.getBody();
-                        LinkerServerRequest request = JSON.parseObject(body, LinkerServerRequest.class);
-                        taskManager.runGrpc(request,transferResponsePromise);
-                        return transferResponsePromise.future();
-                    }
-                })
-                .build();
-        // start the server
-        server.start(ar -> {
-            if (ar.failed()) {
-                log.error("执行失败");
-            } else {
-                // 发布成功
-                log.info("发布成功");
+    private static final ParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
+
+
+    public void runVertxRpc(LinkerServerRequest request, Promise<JsonObject> transferResponsePromise){
+        taskPool.execute(() -> {
+            // 返回的具体对象给
+            Object resultObject = null;
+            LinkerServerResponse response = null;
+            try {
+                // 判断执行的类型
+                switch (request.getExecutionType()) {
+                    case FUNCTION:
+                        // 功能执行
+                        resultObject = runFunction(request);
+                        break;
+                    case TRANSACTION:
+                        //事务执行
+                        resultObject = runTransaction(request);
+                        break;
+                }
+                response = new LinkerServerResponse();
+                response.setResultCode(ResultCode.SUSS);
+                response.setResultData(JSONObject.parseObject(JSON.toJSONString(resultObject)));
+                log.info("执行的功能信息 {} 返回结果为 {}", JSON.toJSONString(request), JSON.toJSONString(response));
+            } catch (Exception e) {
+                log.error("执行的功能信息 {} 异常信息为 {}", JSON.toJSONString(request), ExceptionMessage.getStackTrace(e));
+                // 异常信息给到返回值当中
+                response = new LinkerServerResponse();
+                response.setResultCode(ResultCode.FAIL);
+                response.setExceptional(ExceptionMessage.getStackTrace(e));
             }
+            // 返回-spider-server
+            transferResponsePromise.complete(JsonObject.mapFrom(response));
+        });
+    }
+
+    /**
+     * Grpc的执行方法
+     * @param request
+     * @return
+     */
+    public void runGrpc(LinkerServerRequest request,Promise<TransferResponse> transferResponsePromise){
+        taskPool.execute(() -> {
+            // 返回的具体对象给
+            Object resultObject = null;
+            // 返回消息
+            String message = "";
+            TransferResponse response = null;
+            try {
+                // 判断执行的类型
+                switch (request.getExecutionType()) {
+                    case FUNCTION:
+                        // 功能执行
+                        resultObject = runFunction(request);
+                        break;
+                    case TRANSACTION:
+                        //事务执行
+                        resultObject = runTransaction(request);
+                        break;
+                }
+                message = "执行成功";
+                response = TransferResponse.newBuilder()
+                        .setCode(1001)
+                        .setMessage(message)
+                        .setData(Objects.nonNull(resultObject) ? JSON.toJSONString(resultObject) : "{}")
+                        .build();
+                log.info("执行的功能信息 {} 返回结果为 {}", JSON.toJSONString(request), JSON.toJSONString(response));
+            } catch (Exception e) {
+                log.error("执行的功能信息 {} 异常信息为 {}", JSON.toJSONString(request), ExceptionMessage.getStackTrace(e));
+                // 异常信息给到返回值当中
+                message = ExceptionMessage.getStackTrace(e);
+                response = TransferResponse.newBuilder()
+                        .setCode(1002)
+                        .setMessage(message)
+                        .build();
+            }
+            // 返回-spider-server
+            transferResponsePromise.complete(response);
         });
     }
 

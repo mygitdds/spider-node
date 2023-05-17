@@ -1,7 +1,9 @@
 package cn.spider.framework.linker.server.external;
 
+import cn.spider.framework.common.utils.BrokerInfoUtil;
 import cn.spider.framework.linker.sdk.data.*;
 import cn.spider.framework.linker.sdk.interfaces.LinkerService;
+import cn.spider.framework.linker.sdk.interfaces.VertxRpcTaskInterface;
 import cn.spider.framework.linker.server.socket.ClientInfo;
 import cn.spider.framework.linker.server.socket.ClientRegisterCenter;
 import cn.spider.framework.proto.grpc.TransferRequest;
@@ -11,9 +13,13 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @program: spider-node
@@ -26,8 +32,18 @@ public class LinkerServiceImpl implements LinkerService {
 
     private ClientRegisterCenter clientRegisterCenter;
 
-    public LinkerServiceImpl(ClientRegisterCenter clientRegisterCenter) {
+    private Boolean isVertxRpc;
+
+    private Map<String, VertxRpcTaskInterface> rpcTaskInterfaceMap;
+
+    private Vertx vertx;
+
+    public LinkerServiceImpl(ClientRegisterCenter clientRegisterCenter, Vertx vertx) {
         this.clientRegisterCenter = clientRegisterCenter;
+        String rpcType = BrokerInfoUtil.queryRpcType(vertx);
+        this.isVertxRpc = rpcType.equals("vertxRpc");
+        this.rpcTaskInterfaceMap = new HashMap<>();
+        this.vertx = vertx;
     }
 
     /**
@@ -60,25 +76,46 @@ public class LinkerServiceImpl implements LinkerService {
      * @param param
      */
     private void runBusinessRequest(FunctionRequest functionRequest, Promise<JsonObject> promise,JsonObject param) {
-        ClientInfo clientInfo = clientRegisterCenter.queryClientInfo(functionRequest.getWorkerName());
-        VertxTransferServerGrpc.TransferServerVertxStub serverVertxStub = clientInfo.getServerVertxStub();
-        TransferRequest transferRequest = TransferRequest.newBuilder()
-                .setBody(param.toString())
-                .setHeader("spider-function")
-                .setTaskComponentName(functionRequest.getComponentName())
-                .setTaskComponentVersion(StringUtils.isEmpty(functionRequest.getVersion()) ? "v1": functionRequest.getVersion())
-                .build();
-        Future<TransferResponse> response = serverVertxStub.instruct(transferRequest);
 
-        response.onSuccess(suss -> {
-            TransferResponse result = suss;
-            log.info("runBusinessRequest-result {}",JSON.toJSONString(result));
-            LinkerServerResponse responseNew = buildLinkerServerResponse(result);
-            promise.complete(new JsonObject().put("data", JsonObject.mapFrom(responseNew)));
-        }).onFailure(fail -> {
-           log.error(fail.getMessage());
-            promise.fail(fail);
-        });
+        // vertx-rpc调用
+        if(isVertxRpc){
+            String workerName = functionRequest.getWorkerName();
+            if(!rpcTaskInterfaceMap.containsKey(workerName)){
+                String addr = workerName + VertxRpcTaskInterface.ADDRESS;
+                VertxRpcTaskInterface vertxRpcTaskInterface = VertxRpcTaskInterface.createProxy(vertx,addr);
+                rpcTaskInterfaceMap.put(workerName,vertxRpcTaskInterface);
+            }
+            VertxRpcTaskInterface vertxRpcTaskInterface = rpcTaskInterfaceMap.get(workerName);
+            Future<JsonObject> future = vertxRpcTaskInterface.run(param);
+            future.onSuccess(suss->{
+                LinkerServerResponse responseNew = suss.mapTo(LinkerServerResponse.class);
+                promise.complete(new JsonObject().put("data", JsonObject.mapFrom(responseNew)));
+            }).onFailure(fail->{
+                log.error(fail.getMessage());
+                promise.fail(fail);
+            });
+        }else {
+            //grpc调用
+            ClientInfo clientInfo = clientRegisterCenter.queryClientInfo(functionRequest.getWorkerName());
+            VertxTransferServerGrpc.TransferServerVertxStub serverVertxStub = clientInfo.getServerVertxStub();
+            TransferRequest transferRequest = TransferRequest.newBuilder()
+                    .setBody(param.toString())
+                    .setHeader("spider-function")
+                    .setTaskComponentName(functionRequest.getComponentName())
+                    .setTaskComponentVersion(StringUtils.isEmpty(functionRequest.getVersion()) ? "v1": functionRequest.getVersion())
+                    .build();
+            Future<TransferResponse> response = serverVertxStub.instruct(transferRequest);
+
+            response.onSuccess(suss -> {
+                TransferResponse result = suss;
+                log.info("runBusinessRequest-result {}",JSON.toJSONString(result));
+                LinkerServerResponse responseNew = buildLinkerServerResponse(result);
+                promise.complete(new JsonObject().put("data", JsonObject.mapFrom(responseNew)));
+            }).onFailure(fail -> {
+                log.error(fail.getMessage());
+                promise.fail(fail);
+            });
+        }
     }
 
     /**
@@ -88,23 +125,41 @@ public class LinkerServiceImpl implements LinkerService {
      * @param param
      */
     private void runTransaction(TransactionalRequest request,Promise<JsonObject> promise,JsonObject param){
-        ClientInfo clientInfo = clientRegisterCenter.queryClientInfo(request.getWorkerName());
-        VertxTransferServerGrpc.TransferServerVertxStub serverVertxStub = clientInfo.getServerVertxStub();
-        TransferRequest transferRequest = TransferRequest.newBuilder()
-                .setBody(param.toString())
-                .setHeader("spider-transaction")
-                .build();
-        Future<TransferResponse> response = serverVertxStub.instruct(transferRequest);
-        response.onSuccess(suss -> {
-            TransferResponse result = suss;
-            log.info("runTransaction-result {}",JSON.toJSONString(result));
-            LinkerServerResponse responseNew = buildLinkerServerResponse(result);
-            promise.complete(new JsonObject().put("data", JsonObject.mapFrom(responseNew)));
-        }).onFailure(fail -> {
-            log.error(fail.getMessage());
-            promise.fail(fail);
-        });
-
+        // vertx-rpc调用
+        if(isVertxRpc){
+            String workerName = request.getWorkerName();
+            if(!rpcTaskInterfaceMap.containsKey(workerName)){
+                String addr = workerName + VertxRpcTaskInterface.ADDRESS;
+                VertxRpcTaskInterface vertxRpcTaskInterface = VertxRpcTaskInterface.createProxy(vertx,addr);
+                rpcTaskInterfaceMap.put(workerName,vertxRpcTaskInterface);
+            }
+            VertxRpcTaskInterface vertxRpcTaskInterface = rpcTaskInterfaceMap.get(workerName);
+            Future<JsonObject> future = vertxRpcTaskInterface.run(param);
+            future.onSuccess(suss->{
+                LinkerServerResponse responseNew = suss.mapTo(LinkerServerResponse.class);
+                promise.complete(new JsonObject().put("data", JsonObject.mapFrom(responseNew)));
+            }).onFailure(fail->{
+                log.error(fail.getMessage());
+                promise.fail(fail);
+            });
+        }else {
+            ClientInfo clientInfo = clientRegisterCenter.queryClientInfo(request.getWorkerName());
+            VertxTransferServerGrpc.TransferServerVertxStub serverVertxStub = clientInfo.getServerVertxStub();
+            TransferRequest transferRequest = TransferRequest.newBuilder()
+                    .setBody(param.toString())
+                    .setHeader("spider-transaction")
+                    .build();
+            Future<TransferResponse> response = serverVertxStub.instruct(transferRequest);
+            response.onSuccess(suss -> {
+                TransferResponse result = suss;
+                log.info("runTransaction-result {}",JSON.toJSONString(result));
+                LinkerServerResponse responseNew = buildLinkerServerResponse(result);
+                promise.complete(new JsonObject().put("data", JsonObject.mapFrom(responseNew)));
+            }).onFailure(fail -> {
+                log.error(fail.getMessage());
+                promise.fail(fail);
+            });
+        }
     }
 
 
